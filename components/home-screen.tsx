@@ -31,18 +31,21 @@ export function HomeScreen() {
   const [name, setName] = useState('')
   const [kshetra, setKshetra] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [profileError, setProfileError] = useState('')
 
   // Check if user profile is complete
   const isProfileComplete = userData?.displayName && userData?.kshetra
 
   const handleProfileSubmit = async () => {
     if (!name.trim() || !kshetra) return
-    
+
     setIsSubmitting(true)
+    setProfileError('')
     try {
       await updateUserProfile(name.trim(), kshetra)
     } catch (error) {
       console.error('Error updating profile:', error)
+      setProfileError('Failed to save profile. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -114,7 +117,10 @@ export function HomeScreen() {
                       </SelectContent>
                     </Select>
                   </Field>
-                  <Button 
+                  {profileError && (
+                    <p className="text-sm text-destructive">{profileError}</p>
+                  )}
+                  <Button
                     onClick={handleProfileSubmit}
                     disabled={!name.trim() || !kshetra || isSubmitting}
                     className="w-full mt-2"

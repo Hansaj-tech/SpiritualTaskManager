@@ -17,11 +17,12 @@ import {
   signOut, 
   type User 
 } from 'firebase/auth'
-import { 
-  doc, 
-  getDoc, 
-  setDoc, 
-  serverTimestamp 
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  serverTimestamp
 } from 'firebase/firestore'
 import { auth, googleProvider, db } from '@/lib/firebase'
 
@@ -120,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return
     
     const userDocRef = doc(db, 'users', user.uid)
-    await setDoc(userDocRef, { displayName: name, kshetra }, { merge: true })
+    await updateDoc(userDocRef, { displayName: name, kshetra })
     
     // Update local state
     setUserData(prev => prev ? { ...prev, displayName: name, kshetra } : null)
