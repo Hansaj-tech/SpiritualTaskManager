@@ -77,29 +77,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * On first login, creates a new document with default values
    */
   const fetchUserData = async (uid: string) => {
-    const userDocRef = doc(db, 'users', uid)
-    const userDoc = await getDoc(userDocRef)
-
-    if (userDoc.exists()) {
-      // User exists, load their data
-      const data = userDoc.data()
-      setUserData({
-        wallet: data.wallet || 0,
-        streak: data.streak || 0,
-        lastUpdated: data.lastUpdated?.toDate() || null,
-        displayName: data.displayName || null,
-        kshetra: data.kshetra || null,
-      })
-    } else {
-      // First time login - create new user document with default values
-      const defaultData = {
-        wallet: 0,
-        streak: 0,
-        lastUpdated: null,
-        displayName: null,
-        kshetra: null,
+    const defaultData: UserData = { wallet: 0, streak: 0, lastUpdated: null, displayName: null, kshetra: null }
+    try {
+      const userDocRef = doc(db, 'users', uid)
+      const userDoc = await getDoc(userDocRef)
+      if (userDoc.exists()) {
+        const data = userDoc.data()
+        setUserData({
+          wallet: data.wallet || 0,
+          streak: data.streak || 0,
+          lastUpdated: data.lastUpdated?.toDate() || null,
+          displayName: data.displayName || null,
+          kshetra: data.kshetra || null,
+        })
+      } else {
+        await setDoc(userDocRef, defaultData)
+        setUserData(defaultData)
       }
-      await setDoc(userDocRef, defaultData)
+    } catch (error) {
+      console.error('Firestore fetchUserData error:', error)
       setUserData(defaultData)
     }
   }
@@ -121,10 +117,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return
     
     const userDocRef = doc(db, 'users', user.uid)
-    await updateDoc(userDocRef, { displayName: name, kshetra })
-    
-    // Update local state
-    setUserData(prev => prev ? { ...prev, displayName: name, kshetra } : null)
+    await setDoc(userDocRef, { displayName: name, kshetra }, { merge: true })
+    setUserData(prev => prev
+      ? { ...prev, displayName: name, kshetra }
+      : { wallet: 0, streak: 0, lastUpdated: null, displayName: name, kshetra }
+    )
   }
 
   /**
@@ -156,14 +153,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser)
-      
-      if (currentUser) {
-        await fetchUserData(currentUser.uid)
-      } else {
-        setUserData(null)
+      try {
+        if (currentUser) {
+          await fetchUserData(currentUser.uid)
+        } else {
+          setUserData(null)
+        }
+      } finally {
+        setLoading(false)
       }
-      
-      setLoading(false)
     })
 
     // Cleanup subscription on unmount

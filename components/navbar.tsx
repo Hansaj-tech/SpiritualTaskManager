@@ -104,7 +104,7 @@ export function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                  <Avatar className="h-9 w-9 cursor-pointer">
+                  <Avatar className="h-8 w-8 cursor-pointer">
                     <AvatarImage src={user.photoURL || ''} alt={displayName} />
                     <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
                       {initials}
