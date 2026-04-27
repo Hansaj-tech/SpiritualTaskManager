@@ -43,16 +43,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const profile = await getOrCreateUserProfile(firebaseUser.uid, {
-          displayName: firebaseUser.displayName ?? '',
-          email: firebaseUser.email ?? '',
-          photoURL: firebaseUser.photoURL,
-        })
-        setUser(firebaseUser)
-        setUserProfile(profile)
+        // Set auth cookie immediately so proxy lets the user through
         Cookies.set('aahanik-uid', firebaseUser.uid, { expires: 30, sameSite: 'Lax' })
-        if (profile.kshetra) {
-          Cookies.set('aahanik-onboarded', '1', { expires: 30, sameSite: 'Lax' })
+        setUser(firebaseUser)
+        try {
+          const profile = await getOrCreateUserProfile(firebaseUser.uid, {
+            displayName: firebaseUser.displayName ?? '',
+            email: firebaseUser.email ?? '',
+            photoURL: firebaseUser.photoURL,
+          })
+          setUserProfile(profile)
+          if (profile.kshetra) {
+            Cookies.set('aahanik-onboarded', '1', { expires: 30, sameSite: 'Lax' })
+          }
+        } catch {
+          // Firestore unavailable — user can still navigate; profile loads on retry
         }
       } else {
         setUser(null)
