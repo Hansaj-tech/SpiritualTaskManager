@@ -1,0 +1,27 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "public": "out",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "headers": [
+      {
+        "source": "/firebase-messaging-sw.js",
+        "headers": [{ "key": "Service-Worker-Allowed", "value": "/" }]
+      },
+      {
+        "source": "/sw.js",
+        "headers": [{ "key": "Service-Worker-Allowed", "value": "/" }]
+      }
+    ],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }]
+  },
+  "emulators": {
+    "auth": { "port": 9099 },
+    "firestore": { "port": 8080 },
+    "hosting": { "port": 5000 },
+    "ui": { "enabled": true, "port": 4000 }
+  }
+}

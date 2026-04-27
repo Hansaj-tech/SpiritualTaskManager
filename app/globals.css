@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Saffron color palette */
+  --color-saffron-50: #fff8f0;
+  --color-saffron-100: #fff3e0;
+  --color-saffron-200: #ffe0b2;
+  --color-saffron-300: #ffcc80;
+  --color-saffron-400: #ffa726;
+  --color-saffron-500: #ff6b00;
+  --color-saffron-600: #e05c00;
+  --color-saffron-700: #bf4c00;
+  --color-saffron-800: #8c3500;
+  --color-saffron-900: #5c2000;
+
+  /* Map to semantic tokens */
+  --color-background: #fff8f0;
+  --color-foreground: #1a0f00;
+  --color-card: #ffffff;
+  --color-primary: #e05c00;
+  --color-primary-foreground: #ffffff;
+  --color-muted: #fff3e0;
+  --color-border: #ffe0b2;
+  --color-ring: #e05c00;
+  --radius: 0.75rem;
+
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: #fff8f0;
+  color: #1a0f00;
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Safe area for mobile */
+.pt-safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.pb-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
