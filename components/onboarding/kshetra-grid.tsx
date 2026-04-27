@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { KSHETRA_OPTIONS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
@@ -9,7 +8,6 @@ import { Loader2 } from 'lucide-react'
 
 export function KshetraGrid() {
   const { updateKshetra } = useAuth()
-  const router = useRouter()
   const [selected, setSelected] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -17,7 +15,8 @@ export function KshetraGrid() {
     if (!selected) return
     setSaving(true)
     await updateKshetra(selected)
-    router.push('/dashboard')
+    // Hard navigation so the proxy reads the updated aahanik-onboarded cookie
+    window.location.href = '/dashboard'
   }
 
   return (

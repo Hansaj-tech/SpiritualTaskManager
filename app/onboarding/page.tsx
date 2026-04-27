@@ -1,20 +1,18 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { KshetraGrid } from '@/components/onboarding/kshetra-grid'
 import { Loader2 } from 'lucide-react'
 
 export default function OnboardingPage() {
   const { userProfile, loading } = useAuth()
-  const router = useRouter()
 
   useEffect(() => {
     if (!loading && userProfile?.kshetra) {
-      router.replace('/dashboard')
+      window.location.href = '/dashboard'
     }
-  }, [userProfile, loading, router])
+  }, [userProfile, loading])
 
   if (loading) {
     return (

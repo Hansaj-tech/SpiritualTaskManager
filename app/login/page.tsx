@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { Loader2 } from 'lucide-react'
 
@@ -18,15 +17,25 @@ function GoogleIcon() {
 
 export default function LoginPage() {
   const { user, loading, loginWithGoogle } = useAuth()
-  const router = useRouter()
+  const [signingIn, setSigningIn] = useState(false)
 
+  // Hard navigation so the full HTTP request carries the cookie the proxy reads
   useEffect(() => {
     if (!loading && user) {
-      router.push('/dashboard')
+      window.location.href = '/dashboard'
     }
-  }, [user, loading, router])
+  }, [user, loading])
 
-  if (loading) {
+  async function handleLogin() {
+    setSigningIn(true)
+    try {
+      await loginWithGoogle()
+    } catch {
+      setSigningIn(false)
+    }
+  }
+
+  if (loading || (user && !loading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-orange-50">
         <Loader2 className="w-8 h-8 text-orange-600 animate-spin" />
@@ -56,11 +65,12 @@ export default function LoginPage() {
         </h2>
 
         <button
-          onClick={loginWithGoogle}
-          className="w-full h-12 flex items-center justify-center gap-3 bg-white border-2 border-orange-200 rounded-xl text-orange-900 font-medium hover:bg-orange-50 hover:border-orange-400 transition-all active:scale-95"
+          onClick={handleLogin}
+          disabled={signingIn}
+          className="w-full h-12 flex items-center justify-center gap-3 bg-white border-2 border-orange-200 rounded-xl text-orange-900 font-medium hover:bg-orange-50 hover:border-orange-400 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <GoogleIcon />
-          Continue with Google
+          {signingIn ? <Loader2 className="w-5 h-5 animate-spin" /> : <GoogleIcon />}
+          {signingIn ? 'Signing in…' : 'Continue with Google'}
         </button>
 
         <p className="text-xs text-orange-400 text-center mt-4 leading-relaxed">
