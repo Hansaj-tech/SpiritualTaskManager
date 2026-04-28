@@ -76,26 +76,6 @@ export default function LoginPage() {
   const currentImage = loginImages[activeIdx] ?? null
   const previousImage = prevIdx !== null ? loginImages[prevIdx] : null
 
-  // Shared image layer used in both mobile hero and desktop right panel
-  function ImageLayer({ className = '' }: { className?: string }) {
-    return (
-      <div className={`relative overflow-hidden ${className}`}>
-        {previousImage && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={previousImage} alt="" className="absolute inset-0 w-full h-full object-cover object-top"
-            style={{ opacity: fading ? 0 : 1, transition: 'opacity 0.8s ease' }} />
-        )}
-        {currentImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={currentImage} alt="Mahant Swami Maharaj"
-            className="absolute inset-0 w-full h-full object-cover object-top" />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-orange-500 to-amber-600" />
-        )}
-      </div>
-    )
-  }
-
   const dots = loginImages.length > 1 && (
     <div className="flex gap-1.5 mt-5">
       {loginImages.map((_, i) => (
@@ -106,7 +86,7 @@ export default function LoginPage() {
     </div>
   )
 
-  const loginCard = (
+  const loginForm = (
     <>
       <p className="text-center text-orange-900 font-semibold text-lg mb-1">Begin Your Practice</p>
       <p className="text-center text-orange-400 text-sm mb-8">Track your 10 daily spiritual activities</p>
@@ -127,32 +107,55 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
 
-      {/* ══ MOBILE layout (below md) ══════════════════════════════════════ */}
+      {/* ══════════════ MOBILE (below md) ══════════════ */}
 
-      {/* Image hero — top 58% of screen */}
-      <div className="md:hidden relative flex-shrink-0" style={{ height: '58svh' }}>
-        <ImageLayer className="absolute inset-0 w-full h-full" />
-        {/* gradient: transparent top → dark bottom so white card blends */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/55 pointer-events-none" />
+      {/* Image hero — explicit height so it never collapses */}
+      <div className="md:hidden relative h-[60vh] flex-shrink-0 overflow-hidden">
+        {/* Fallback gradient (shows while image loads or if none set) */}
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-orange-500 to-amber-600" />
 
-        {/* Brand centered in image */}
+        {/* Previous image (crossfade out) */}
+        {previousImage && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={previousImage}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-top"
+            style={{ opacity: fading ? 0 : 1, transition: 'opacity 0.8s ease' }}
+          />
+        )}
+
+        {/* Current image */}
+        {currentImage && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={currentImage}
+            alt="Mahant Swami Maharaj"
+            className="absolute inset-0 w-full h-full object-cover object-top"
+          />
+        )}
+
+        {/* Gradient overlay — dark at top (status bar) and bottom (card merge) */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
+
+        {/* Brand centered over image */}
         <div className="absolute inset-0 flex flex-col items-center justify-center px-8 pb-10">
-          <div className="w-20 h-20 rounded-full bg-white/15 ring-4 ring-white/25 flex items-center justify-center mb-4 shadow-2xl p-3">
+          <div className="w-20 h-20 rounded-full bg-white/20 ring-4 ring-white/30 flex items-center justify-center mb-4 shadow-2xl p-3">
             <BapsLogo className="w-full h-full" />
           </div>
-          <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-lg">Aahanik</h1>
+          <h1 className="text-[2.5rem] font-bold text-white tracking-tight drop-shadow-lg">Aahanik</h1>
           <p className="text-white/85 text-sm text-center mt-1 drop-shadow">Daily Spiritual Practice Tracker</p>
           <p className="text-white/60 text-xs mt-0.5 drop-shadow">॥ Jai Swaminarayan ॥</p>
           {dots}
         </div>
       </div>
 
-      {/* White login card overlaps the image slightly */}
-      <div className="md:hidden bg-white rounded-t-[2.5rem] -mt-7 relative z-10 px-6 pt-8 pb-10 shadow-2xl flex-1">
-        {loginCard}
+      {/* White login card — overlaps the image with negative margin */}
+      <div className="md:hidden bg-white rounded-t-[2rem] -mt-8 relative z-10 px-6 pt-8 pb-12 shadow-2xl">
+        {loginForm}
       </div>
 
-      {/* ══ DESKTOP layout (md+) ════════════════════════════════════════ */}
+      {/* ══════════════ DESKTOP (md+) ══════════════ */}
 
       {/* Left saffron panel */}
       <div className="hidden md:flex flex-col bg-orange-600 w-[420px] min-h-screen flex-shrink-0">
@@ -165,26 +168,33 @@ export default function LoginPage() {
           <p className="text-orange-200 text-sm mt-1">॥ Jai Swaminarayan ॥</p>
           {dots}
         </div>
-
-        {/* Login card pinned to bottom of saffron panel */}
         <div className="bg-white rounded-tr-[2rem] px-6 pt-8 pb-12 shadow-2xl">
-          {loginCard}
+          {loginForm}
         </div>
       </div>
 
       {/* Right image panel */}
       <div className="hidden md:block flex-1 relative overflow-hidden">
-        <ImageLayer className="absolute inset-0 w-full h-full" />
-        {currentImage && (
-          <div className="absolute inset-0 bg-gradient-to-r from-orange-600/15 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-orange-500 to-amber-600" />
+        {previousImage && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={previousImage} alt="" className="absolute inset-0 w-full h-full object-cover object-center"
+            style={{ opacity: fading ? 0 : 1, transition: 'opacity 0.8s ease' }} />
         )}
-        {!currentImage && (
+        {currentImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={currentImage} alt="Mahant Swami Maharaj"
+            className="absolute inset-0 w-full h-full object-cover object-center" />
+        ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
             <BapsLogo className="w-40 h-40 opacity-20" />
             <p className="text-white/40 text-sm text-center px-8">
               Set login images from<br />Admin → Settings → Images
             </p>
           </div>
+        )}
+        {currentImage && (
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-600/15 via-transparent to-transparent pointer-events-none" />
         )}
       </div>
     </div>
