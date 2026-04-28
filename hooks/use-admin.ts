@@ -5,7 +5,7 @@ import { collection, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/auth-context'
 import { docToUserProfile } from '@/lib/firestore-helpers'
-import type { ActivityId } from '@/types'
+import type { UserProfile, ActivityId } from '@/types'
 
 export type AdminUser = Omit<UserProfile, 'fcmTokens'>
 

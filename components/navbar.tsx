@@ -4,6 +4,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { useRouter } from 'next/navigation'
 import { LogOut, User, MapPin, ChevronDown } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
+import { BapsLogo } from '@/components/baps-logo'
 
 export function Navbar() {
   const { userProfile, logout } = useAuth()
@@ -26,10 +27,8 @@ export function Navbar() {
       <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
         {/* Brand */}
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-orange-600 flex items-center justify-center shadow-sm">
-            <svg viewBox="0 0 40 40" className="w-5 h-5 text-white" fill="currentColor">
-              <text x="50%" y="58%" dominantBaseline="middle" textAnchor="middle" fontSize="26" fontFamily="serif">ॐ</text>
-            </svg>
+          <div className="w-8 h-8 rounded-lg bg-white border border-orange-100 flex items-center justify-center shadow-sm p-0.5">
+            <BapsLogo className="w-full h-full" />
           </div>
           <span className="font-bold text-orange-900 text-lg tracking-tight">Aahanik</span>
         </div>
