@@ -32,17 +32,21 @@ function markFiredToday(activityId: string): void {
 }
 
 async function fireNotification(title: string, body: string, tag: string) {
-  // Prefer service worker showNotification — works even when page is backgrounded
+  // Try service worker first — works even when page tab is backgrounded
   if ('serviceWorker' in navigator) {
     try {
-      const reg = await navigator.serviceWorker.ready
-      if (reg.active) {
+      const swReady = Promise.race<ServiceWorkerRegistration | null>([
+        navigator.serviceWorker.ready,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+      ])
+      const reg = await swReady
+      if (reg?.active) {
         reg.active.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag })
         return
       }
     } catch { /* fall through */ }
   }
-  // Fallback: direct Notification API (only works when page is in foreground)
+  // Fallback: direct Notification API
   if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
     new Notification(title, { body, icon: '/icon-192x192.png', tag })
   }

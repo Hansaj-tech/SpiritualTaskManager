@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 270" fill="none">
+  <!-- Mandir dome arch outline -->
+  <path d="M110 8 L114 14 L118 12 L116 18 L122 17 L118 22 L122 24 L116 24 L114 30 L112 25 L108 30 L106 24 L100 24 L104 22 L100 17 L106 18 L104 12 L108 14 Z" fill="#333" stroke="#333" stroke-width="0.5"/>
+  <!-- Kalash/finial stem -->
+  <rect x="108" y="28" width="4" height="12" fill="#555"/>
+  <!-- Dome curve -->
+  <path d="M55 90 Q60 55 110 45 Q160 55 165 90 Z" stroke="#222" stroke-width="2.5" fill="white"/>
+  <!-- Dome top decoration -->
+  <path d="M75 90 Q85 68 110 62 Q135 68 145 90" stroke="#222" stroke-width="2" fill="none"/>
+  <!-- Left wing -->
+  <path d="M18 108 Q35 100 55 90 L50 108 Z" stroke="#222" stroke-width="2" fill="white"/>
+  <path d="M18 108 L25 100 L30 108" stroke="#222" stroke-width="1.5" fill="none"/>
+  <!-- Right wing -->
+  <path d="M202 108 Q185 100 165 90 L170 108 Z" stroke="#222" stroke-width="2" fill="white"/>
+  <path d="M202 108 L195 100 L190 108" stroke="#222" stroke-width="1.5" fill="none"/>
+  <!-- Left pillar knob -->
+  <circle cx="52" cy="110" r="4" stroke="#222" stroke-width="1.5" fill="white"/>
+  <!-- Right pillar knob -->
+  <circle cx="168" cy="110" r="4" stroke="#222" stroke-width="1.5" fill="white"/>
+  <!-- Left small spires -->
+  <line x1="35" y1="95" x2="35" y2="88" stroke="#222" stroke-width="1.5"/>
+  <circle cx="35" cy="87" r="2" fill="#222"/>
+  <!-- Right small spires -->
+  <line x1="185" y1="95" x2="185" y2="88" stroke="#222" stroke-width="1.5"/>
+  <circle cx="185" cy="87" r="2" fill="#222"/>
+
+  <!-- Mandir body - main walls -->
+  <rect x="50" y="90" width="120" height="68" rx="2" stroke="#222" stroke-width="2" fill="white"/>
+  <!-- Inner decoration lines on body -->
+  <line x1="50" y1="100" x2="170" y2="100" stroke="#ddd" stroke-width="0.8"/>
+
+  <!-- Golden U-shape (Akshar symbol) -->
+  <path d="M95 100 L95 140 Q95 158 110 158 Q125 158 125 140 L125 100" stroke="#F5A000" stroke-width="7" fill="none" stroke-linecap="round"/>
+
+  <!-- Red circle (tilak) -->
+  <circle cx="110" cy="130" r="17" fill="#CC0000"/>
+
+  <!-- Banner/scroll rectangle -->
+  <rect x="50" y="158" width="120" height="22" rx="2" fill="white" stroke="#CC0000" stroke-width="1.5"/>
+  <!-- स्वामिनारायण text -->
+  <text x="110" y="174" text-anchor="middle" font-size="12" font-family="serif" fill="#CC0000" font-weight="600">स्वामिनारायण</text>
+
+  <!-- Base line -->
+  <rect x="48" y="178" width="124" height="4" rx="1" fill="#222"/>
+
+  <!-- ® symbol -->
+  <text x="175" y="95" font-size="9" font-family="sans-serif" fill="#333">®</text>
+
+  <!-- BAPS text -->
+  <text x="110" y="220" text-anchor="middle" font-size="46" font-family="'Arial Black', 'Impact', sans-serif" fill="#111" font-weight="900" letter-spacing="-1">BAPS</text>
+  <!-- Red dot in A of BAPS -->
+  <circle cx="110" cy="212" r="3.5" fill="#CC0000"/>
+</svg>

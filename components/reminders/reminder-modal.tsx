@@ -36,6 +36,11 @@ export function ReminderModal({
 
   async function handleSave() {
     setSaving(true)
+    // Request permission immediately in the button click handler (user gesture)
+    // before any async work, so browsers don't block the permission dialog
+    if (enabled && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      await Notification.requestPermission()
+    }
     await onSave({ activityId, enabled, time })
     setSaving(false)
     onClose()
