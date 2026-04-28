@@ -31,24 +31,25 @@ function markFiredToday(activityId: string): void {
   try { localStorage.setItem(firedKey(activityId), '1') } catch { /* ignore */ }
 }
 
-async function fireNotification(title: string, body: string, tag: string) {
-  // Try service worker first — works even when page tab is backgrounded
-  if ('serviceWorker' in navigator) {
-    try {
-      const swReady = Promise.race<ServiceWorkerRegistration | null>([
-        navigator.serviceWorker.ready,
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
-      ])
-      const reg = await swReady
+export async function sendNotification(title: string, body: string, tag: string) {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
+
+  // Try SW first — works even when tab is backgrounded
+  try {
+    if ('serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.getRegistration('/')
       if (reg?.active) {
         reg.active.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag })
         return
       }
-    } catch { /* fall through */ }
-  }
-  // Fallback: direct Notification API
-  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    }
+  } catch { /* fall through */ }
+
+  // Direct fallback — works when tab is in foreground or backgrounded
+  try {
     new Notification(title, { body, icon: '/icon-192x192.png', tag })
+  } catch (e) {
+    console.error('[Aahanik] Notification failed:', e)
   }
 }
 
@@ -67,16 +68,13 @@ function checkAndFire(
     if (hasFiredToday(pref.activityId)) return
 
     const reminderAt = toMinutes(pref.time)
-    // Fire within a 5-minute window past the reminder time
-    if (now < reminderAt || now > reminderAt + 5) return
+    // Fire if within a 45-minute window past the reminder time
+    // Wide window so the notification fires even if app was just opened
+    if (now < reminderAt || now > reminderAt + 45) return
 
     markFiredToday(pref.activityId)
     const name = activityNames[pref.activityId] ?? 'your daily practice'
-    fireNotification(
-      'Aahanik — Time for Seva',
-      `${name} 🙏`,
-      pref.activityId
-    )
+    sendNotification('Aahanik — Time for Seva', `${name} 🙏`, pref.activityId)
   })
 }
 
@@ -109,15 +107,16 @@ export function useReminders(
     })
   }, [user])
 
-  // Poll every 30s; also check immediately when reminders data loads
+  // Poll every 60s
   useEffect(() => {
     const run = () => checkAndFire(remindersRef.current, doneIdsRef.current, namesRef.current)
     run()
-    const id = setInterval(run, 30_000)
+    const id = setInterval(run, 60_000)
     return () => clearInterval(id)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Also check when reminders data loads
   useEffect(() => {
     if (Object.keys(reminders).length > 0) {
       checkAndFire(reminders, doneIdsRef.current, namesRef.current)

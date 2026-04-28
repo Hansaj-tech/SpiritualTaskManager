@@ -5,6 +5,7 @@ import * as Switch from '@radix-ui/react-switch'
 import { useState, useEffect } from 'react'
 import { Bell, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { sendNotification } from '@/hooks/use-reminders'
 import type { ReminderPref } from '@/types'
 
 interface ReminderModalProps {
@@ -111,14 +112,26 @@ export function ReminderModal({
             </div>
           )}
 
-          {/* Save button */}
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="w-full h-12 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-60"
-          >
-            {saving ? 'Saving…' : 'Save Reminder'}
-          </button>
+          <div className="flex gap-2">
+            {/* Test button — fire a notification immediately to verify it works */}
+            {enabled && (
+              <button
+                type="button"
+                onClick={() => sendNotification('Aahanik — Test', `${activityName} reminder works! 🙏`, 'test')}
+                className="h-12 px-4 rounded-xl border-2 border-orange-200 text-orange-700 font-semibold text-sm hover:bg-orange-50 transition-colors"
+              >
+                Test
+              </button>
+            )}
+            {/* Save button */}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex-1 h-12 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-60"
+            >
+              {saving ? 'Saving…' : 'Save Reminder'}
+            </button>
+          </div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
