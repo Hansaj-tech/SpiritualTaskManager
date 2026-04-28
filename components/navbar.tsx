@@ -1,14 +1,12 @@
 'use client'
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { useRouter } from 'next/navigation'
 import { LogOut, User, MapPin, ChevronDown } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { BapsLogo } from '@/components/baps-logo'
 
 export function Navbar() {
   const { userProfile, logout } = useAuth()
-  const router = useRouter()
 
   const initials = (userProfile?.displayName ?? 'U')
     .split(' ')
@@ -19,7 +17,7 @@ export function Navbar() {
 
   async function handleLogout() {
     await logout()
-    router.push('/login')
+    window.location.href = '/login'
   }
 
   return (
@@ -81,7 +79,7 @@ export function Navbar() {
 
               <DropdownMenu.Item
                 className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-orange-800 rounded-xl hover:bg-orange-50 cursor-pointer outline-none transition-colors"
-                onSelect={() => router.push('/profile')}
+                onSelect={() => { window.location.href = '/profile' }}
               >
                 <User className="w-4 h-4 text-orange-500" />
                 Edit Profile
@@ -89,7 +87,7 @@ export function Navbar() {
 
               <DropdownMenu.Item
                 className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-orange-800 rounded-xl hover:bg-orange-50 cursor-pointer outline-none transition-colors"
-                onSelect={() => router.push('/onboarding')}
+                onSelect={() => { window.location.href = '/profile' }}
               >
                 <MapPin className="w-4 h-4 text-orange-500" />
                 Change Kshetra
