@@ -50,6 +50,7 @@ export function useAdminUserDetail(uid: string) {
   const [activityLog, setActivityLog] = useState<Record<ActivityId, { done: number; total: number }>>({} as never)
   const [totalDays, setTotalDays] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user || !uid) return
@@ -82,10 +83,15 @@ export function useAdminUserDetail(uid: string) {
       setActivityLog(log as Record<ActivityId, { done: number; total: number }>)
       setTotalDays(snap.size)
       setLoading(false)
-    }).catch(() => setLoading(false))
+    }).catch((e: Error) => {
+      if (!cancelled) {
+        setError(e.message)
+        setLoading(false)
+      }
+    })
 
     return () => { cancelled = true }
   }, [user, uid])
 
-  return { activityLog, totalDays, loading }
+  return { activityLog, totalDays, loading, error }
 }

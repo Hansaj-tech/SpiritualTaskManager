@@ -10,7 +10,7 @@ interface UserDetailPanelProps {
 }
 
 export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
-  const { activityLog, loading } = useAdminUserDetail(uid)
+  const { activityLog, loading, error } = useAdminUserDetail(uid)
 
   return (
     <div className="flex flex-col gap-4">
@@ -52,6 +52,15 @@ export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
         {loading ? (
           <div className="flex justify-center py-8">
             <div className="w-6 h-6 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin" />
+          </div>
+        ) : error ? (
+          <div className="px-4 py-6 text-center">
+            <p className="text-sm font-semibold text-red-500 mb-1">Permission denied</p>
+            <p className="text-xs text-orange-400 leading-relaxed">
+              Firestore rules need updating. Go to Firebase Console → Firestore → Rules and add:<br/>
+              <code className="text-xs bg-orange-50 px-1 rounded">allow read: if isAdmin();</code><br/>
+              under the activityLogs match block, then click Publish.
+            </p>
           </div>
         ) : (
           ACTIVITY_IDS.map((id) => {
