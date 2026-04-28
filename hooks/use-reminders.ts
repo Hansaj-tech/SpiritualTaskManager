@@ -14,51 +14,25 @@ function toMinutes(hhmm: string): number {
 }
 
 function nowMinutes(): number {
-  const now = new Date()
-  return now.getHours() * 60 + now.getMinutes()
+  const d = new Date()
+  return d.getHours() * 60 + d.getMinutes()
 }
 
-function firedKey(activityId: string): string {
-  return `aahanik-notif-${todayKey()}-${activityId}`
+function firedKey(id: string) {
+  return `aahanik-notif-${todayKey()}-${id}`
 }
 
-function hasFiredToday(activityId: string): boolean {
-  try { return localStorage.getItem(firedKey(activityId)) === '1' } catch { return false }
+function hasFiredToday(id: string) {
+  try { return localStorage.getItem(firedKey(id)) === '1' } catch { return false }
 }
 
-function markFiredToday(activityId: string): void {
-  try { localStorage.setItem(firedKey(activityId), '1') } catch { /* ignore */ }
+function markFiredToday(id: string) {
+  try { localStorage.setItem(firedKey(id), '1') } catch { /**/ }
 }
 
-function showNotification(title: string, body: string, tag: string) {
-  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
-  try {
-    new Notification(title, { body, icon: '/icon-192x192.png', tag })
-  } catch { /* silently ignore — iOS Safari blocks this for non-PWA */ }
-}
-
-function checkAndFire(
-  reminders: Record<string, ReminderPref>,
-  todayDoneIds: string[],
-  activityNames: Record<string, string>
-) {
-  if (typeof Notification === 'undefined') return
-  if (Notification.permission !== 'granted') return
-  const now = nowMinutes()
-
-  Object.values(reminders).forEach((pref) => {
-    if (!pref.enabled) return
-    if (todayDoneIds.includes(pref.activityId)) return
-    if (hasFiredToday(pref.activityId)) return
-
-    const reminderAt = toMinutes(pref.time)
-    // Fire within a 45-minute window — handles delayed app opens
-    if (now < reminderAt || now > reminderAt + 45) return
-
-    markFiredToday(pref.activityId)
-    const name = activityNames[pref.activityId] ?? 'your daily practice'
-    showNotification('Aahanik — Time for Seva', `${name} 🙏`, pref.activityId)
-  })
+export interface ReminderAlert {
+  activityId: string
+  name: string
 }
 
 export function useReminders(
@@ -67,15 +41,46 @@ export function useReminders(
 ) {
   const { user } = useAuth()
   const [reminders, setReminders] = useState<Record<string, ReminderPref>>({})
+  const [alerts, setAlerts] = useState<ReminderAlert[]>([])
+
   const remindersRef = useRef(reminders)
-  const doneIdsRef = useRef(todayDoneIds)
-  const namesRef = useRef(activityNames)
+  const doneIdsRef   = useRef(todayDoneIds)
+  const namesRef     = useRef(activityNames)
 
   useEffect(() => { remindersRef.current = reminders }, [reminders])
   useEffect(() => { doneIdsRef.current = todayDoneIds }, [todayDoneIds])
   useEffect(() => { namesRef.current = activityNames }, [activityNames])
 
-  // Real-time listener for reminders
+  const fireAlert = useCallback((activityId: string, name: string) => {
+    // In-app alert — always works when app is open
+    setAlerts((prev) =>
+      prev.find((a) => a.activityId === activityId)
+        ? prev
+        : [...prev, { activityId, name }]
+    )
+    // Browser notification — bonus if permission granted
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      try { new Notification('Aahanik — Time for Seva', { body: `${name} 🙏`, icon: '/icon-192x192.png', tag: activityId }) } catch { /**/ }
+    }
+  }, [])
+
+  const checkAndFire = useCallback(() => {
+    const now = nowMinutes()
+    Object.values(remindersRef.current).forEach((pref) => {
+      if (!pref.enabled) return
+      if (doneIdsRef.current.includes(pref.activityId)) return
+      if (hasFiredToday(pref.activityId)) return
+
+      const at = toMinutes(pref.time)
+      if (now < at || now > at + 45) return
+
+      markFiredToday(pref.activityId)
+      const name = namesRef.current[pref.activityId] ?? 'Daily Practice'
+      fireAlert(pref.activityId, name)
+    })
+  }, [fireAlert])
+
+  // Real-time Firestore listener
   useEffect(() => {
     if (!user) return
     const ref = collection(db, 'users', user.uid, 'reminders')
@@ -89,28 +94,26 @@ export function useReminders(
     })
   }, [user])
 
-  // Poll every 60s + check immediately on mount
+  // Poll every 60s + check on mount
   useEffect(() => {
-    const run = () => checkAndFire(remindersRef.current, doneIdsRef.current, namesRef.current)
-    run()
-    const id = setInterval(run, 60_000)
+    checkAndFire()
+    const id = setInterval(checkAndFire, 60_000)
     return () => clearInterval(id)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [checkAndFire])
 
-  // Check again whenever reminders load from Firestore
+  // Check when reminders load from Firestore
   useEffect(() => {
-    if (Object.keys(reminders).length > 0) {
-      checkAndFire(reminders, doneIdsRef.current, namesRef.current)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reminders])
+    if (Object.keys(reminders).length > 0) checkAndFire()
+  }, [reminders, checkAndFire])
+
+  const dismissAlert = useCallback((activityId: string) => {
+    setAlerts((prev) => prev.filter((a) => a.activityId !== activityId))
+  }, [])
 
   const setReminder = useCallback(
     async (pref: ReminderPref) => {
       if (!user) return
-      // Request permission directly — don't involve FCM for local reminders
-      if (pref.enabled && typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+      if (pref.enabled && typeof Notification !== 'undefined' && Notification.permission === 'default') {
         await Notification.requestPermission()
       }
       await saveReminder(user.uid, pref)
@@ -118,5 +121,5 @@ export function useReminders(
     [user]
   )
 
-  return { reminders, setReminder }
+  return { reminders, setReminder, alerts, dismissAlert }
 }
