@@ -1,19 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { KshetraGrid } from '@/components/onboarding/kshetra-grid'
 import { BapsLogo } from '@/components/baps-logo'
 import { Loader2 } from 'lucide-react'
 
 export default function OnboardingPage() {
-  const { userProfile, loading } = useAuth()
-
-  useEffect(() => {
-    if (!loading && userProfile?.kshetra) {
-      window.location.href = '/dashboard'
-    }
-  }, [userProfile, loading])
+  const { loading } = useAuth()
 
   if (loading) {
     return (

@@ -7,8 +7,8 @@ import { cn } from '@/lib/utils'
 import { Loader2, Check } from 'lucide-react'
 
 export function KshetraGrid() {
-  const { updateKshetra } = useAuth()
-  const [selected, setSelected] = useState<string | null>(null)
+  const { userProfile, updateKshetra } = useAuth()
+  const [selected, setSelected] = useState<string | null>(userProfile?.kshetra ?? null)
   const [saving, setSaving] = useState(false)
 
   async function handleContinue() {

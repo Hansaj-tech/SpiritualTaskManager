@@ -10,7 +10,7 @@ import type { ActivityDefinition, AppConfig } from '@/types'
 
 export default function AdminSettingsPage() {
   const [activityDefs, setActivityDefs] = useState<ActivityDefinition[]>([])
-  const [appConfig, setAppConfig] = useState<AppConfig>({ dailyQuote: '', guruImages: [], loginImages: [] })
+  const [appConfig, setAppConfig] = useState<AppConfig>({ dailyQuote: '', guruImages: [] })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -55,10 +55,7 @@ export default function AdminSettingsPage() {
         </Tabs.Content>
 
         <Tabs.Content value="images">
-          <ImagesEditor
-            initialImages={appConfig.guruImages}
-            initialLoginImages={appConfig.loginImages}
-          />
+          <ImagesEditor initialImages={appConfig.guruImages} />
         </Tabs.Content>
       </Tabs.Root>
     </div>
