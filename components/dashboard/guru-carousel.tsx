@@ -3,6 +3,7 @@
 import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
 import { useEffect, useState } from 'react'
+import { BapsLogo } from '@/components/baps-logo'
 
 interface GuruCarouselProps {
   images: string[]
@@ -42,9 +43,9 @@ export function GuruCarousel({ images }: GuruCarouselProps) {
                 <div
                   className={`w-full h-full bg-gradient-to-br ${PLACEHOLDER_GRADIENT[i % 3]} flex items-center justify-center`}
                 >
-                  <div className="text-center text-white">
-                    <div className="text-4xl mb-1">🕉</div>
-                    <p className="text-xs opacity-80 font-medium">Jai Swaminarayan</p>
+                  <div className="text-center text-white flex flex-col items-center gap-2">
+                    <BapsLogo className="w-16 h-16" />
+                    <p className="text-xs opacity-90 font-semibold tracking-wide">Jai Swaminarayan</p>
                   </div>
                 </div>
               ) : (

@@ -19,23 +19,33 @@ function nowMinutes(): number {
   return now.getHours() * 60 + now.getMinutes()
 }
 
-// Persist fired-today keys in localStorage so page refresh doesn't re-fire
 function firedKey(activityId: string): string {
   return `aahanik-notif-${todayKey()}-${activityId}`
 }
 
 function hasFiredToday(activityId: string): boolean {
-  try {
-    return localStorage.getItem(firedKey(activityId)) === '1'
-  } catch {
-    return false
-  }
+  try { return localStorage.getItem(firedKey(activityId)) === '1' } catch { return false }
 }
 
 function markFiredToday(activityId: string): void {
-  try {
-    localStorage.setItem(firedKey(activityId), '1')
-  } catch { /* ignore */ }
+  try { localStorage.setItem(firedKey(activityId), '1') } catch { /* ignore */ }
+}
+
+async function fireNotification(title: string, body: string, tag: string) {
+  // Prefer service worker showNotification — works even when page is backgrounded
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.ready
+      if (reg.active) {
+        reg.active.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag })
+        return
+      }
+    } catch { /* fall through */ }
+  }
+  // Fallback: direct Notification API (only works when page is in foreground)
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    new Notification(title, { body, icon: '/icon-192x192.png', tag })
+  }
 }
 
 function checkAndFire(
@@ -53,21 +63,23 @@ function checkAndFire(
     if (hasFiredToday(pref.activityId)) return
 
     const reminderAt = toMinutes(pref.time)
-    // Fire if we're within a 5-minute window past the reminder time
+    // Fire within a 5-minute window past the reminder time
     if (now < reminderAt || now > reminderAt + 5) return
 
     markFiredToday(pref.activityId)
-    const name = activityNames[pref.activityId] ?? 'your activity'
-    new Notification('Aahanik — Time for Seva', {
-      body: `${name} — don't forget your daily practice 🙏`,
-      icon: '/icon-192x192.png',
-      badge: '/icon-192x192.png',
-      tag: pref.activityId,
-    })
+    const name = activityNames[pref.activityId] ?? 'your daily practice'
+    fireNotification(
+      'Aahanik — Time for Seva',
+      `${name} 🙏`,
+      pref.activityId
+    )
   })
 }
 
-export function useReminders(todayDoneIds: string[] = [], activityNames: Record<string, string> = {}) {
+export function useReminders(
+  todayDoneIds: string[] = [],
+  activityNames: Record<string, string> = {}
+) {
   const { user } = useAuth()
   const { requestPermission } = useFcm()
   const [reminders, setReminders] = useState<Record<string, ReminderPref>>({})
@@ -79,7 +91,7 @@ export function useReminders(todayDoneIds: string[] = [], activityNames: Record<
   useEffect(() => { doneIdsRef.current = todayDoneIds }, [todayDoneIds])
   useEffect(() => { namesRef.current = activityNames }, [activityNames])
 
-  // Listen to user's reminders collection
+  // Real-time listener for reminders
   useEffect(() => {
     if (!user) return
     const ref = collection(db, 'users', user.uid, 'reminders')
@@ -93,7 +105,7 @@ export function useReminders(todayDoneIds: string[] = [], activityNames: Record<
     })
   }, [user])
 
-  // Poll every 30s; also check immediately when reminders load
+  // Poll every 30s; also check immediately when reminders data loads
   useEffect(() => {
     const run = () => checkAndFire(remindersRef.current, doneIdsRef.current, namesRef.current)
     run()
@@ -102,7 +114,6 @@ export function useReminders(todayDoneIds: string[] = [], activityNames: Record<
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Re-check when reminders data first loads from Firestore
   useEffect(() => {
     if (Object.keys(reminders).length > 0) {
       checkAndFire(reminders, doneIdsRef.current, namesRef.current)

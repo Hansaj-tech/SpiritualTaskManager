@@ -22,6 +22,7 @@ service cloud.firestore {
 
       match /activityLogs/{dateKey} {
         allow read, write: if isOwner(uid);
+        allow read: if isAdmin();
       }
 
       match /reminders/{activityId} {
