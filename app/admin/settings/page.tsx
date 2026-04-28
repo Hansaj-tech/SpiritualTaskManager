@@ -55,7 +55,10 @@ export default function AdminSettingsPage() {
         </Tabs.Content>
 
         <Tabs.Content value="images">
-          <ImagesEditor initialImages={appConfig.guruImages} />
+          <ImagesEditor
+            initialImages={appConfig.guruImages}
+            initialLoginImage={appConfig.loginImage}
+          />
         </Tabs.Content>
       </Tabs.Root>
     </div>

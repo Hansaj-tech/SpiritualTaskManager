@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/auth-context'
-import { Loader2 } from 'lucide-react'
+import { getAppConfig } from '@/lib/firestore-helpers'
 import { BapsLogo } from '@/components/baps-logo'
+import { Loader2 } from 'lucide-react'
 
 function GoogleIcon() {
   return (
@@ -19,6 +20,13 @@ function GoogleIcon() {
 export default function LoginPage() {
   const { user, loading, loginWithGoogle } = useAuth()
   const [signingIn, setSigningIn] = useState(false)
+  const [loginImage, setLoginImage] = useState('')
+
+  useEffect(() => {
+    getAppConfig().then((cfg) => {
+      if (cfg.loginImage) setLoginImage(cfg.loginImage)
+    })
+  }, [])
 
   useEffect(() => {
     if (!loading && user) {
@@ -44,57 +52,80 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-orange-600">
-      {/* Hero section */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pt-16 pb-8">
-        {/* BAPS logo */}
-        <div className="w-28 h-28 rounded-full bg-white/15 flex items-center justify-center mb-6 shadow-2xl ring-4 ring-white/20 p-4">
-          <BapsLogo className="w-full h-full" />
+    <div className="min-h-screen flex flex-col md:flex-row">
+      {/* ── Left panel — saffron brand + login form ── */}
+      <div className="flex flex-col bg-orange-600 md:w-[420px] md:min-h-screen md:flex-shrink-0">
+        {/* Hero */}
+        <div className="flex flex-col items-center justify-center flex-1 px-8 pt-14 pb-8">
+          <div className="w-28 h-28 rounded-full bg-white/15 flex items-center justify-center mb-6 shadow-2xl ring-4 ring-white/20 p-4">
+            <BapsLogo className="w-full h-full" />
+          </div>
+          <h1 className="text-4xl font-bold text-white tracking-tight mb-2">Aahanik</h1>
+          <p className="text-orange-100 text-base text-center leading-relaxed">
+            Daily Spiritual Practice Tracker
+          </p>
+          <p className="text-orange-200 text-sm mt-1">॥ Jai Swaminarayan ॥</p>
+
+          <div className="flex gap-2 mt-8">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className={`rounded-full bg-white ${i === 1 ? 'w-6 h-2' : 'w-2 h-2 opacity-50'}`}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* App name */}
-        <h1 className="text-4xl font-bold text-white tracking-tight mb-2">Aahanik</h1>
-        <p className="text-orange-100 text-base text-center leading-relaxed">
-          Daily Spiritual Practice Tracker
-        </p>
-        <p className="text-orange-200 text-sm mt-1">॥ Jai Swaminarayan ॥</p>
+        {/* Login card — white rounded panel */}
+        <div className="bg-white rounded-t-[2rem] md:rounded-none md:rounded-tr-[2rem] px-6 pt-8 pb-10 shadow-2xl">
+          <p className="text-center text-orange-900 font-semibold text-lg mb-1">
+            Begin Your Practice
+          </p>
+          <p className="text-center text-orange-400 text-sm mb-8">
+            Track your 10 daily spiritual activities
+          </p>
 
-        {/* Decorative dots */}
-        <div className="flex gap-2 mt-8">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className={`rounded-full bg-white ${i === 1 ? 'w-6 h-2' : 'w-2 h-2 opacity-50'}`}
-            />
-          ))}
+          <button
+            onClick={handleLogin}
+            disabled={signingIn}
+            className="w-full h-14 flex items-center justify-center gap-3 bg-white border-2 border-orange-200 rounded-2xl text-orange-900 font-semibold text-base hover:bg-orange-50 hover:border-orange-400 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+          >
+            {signingIn ? (
+              <Loader2 className="w-5 h-5 animate-spin text-orange-600" />
+            ) : (
+              <GoogleIcon />
+            )}
+            {signingIn ? 'Signing in…' : 'Continue with Google'}
+          </button>
+
+          <p className="text-xs text-orange-300 text-center mt-5 leading-relaxed">
+            By continuing, you agree to track your<br />daily spiritual activities with devotion
+          </p>
         </div>
       </div>
 
-      {/* Bottom card */}
-      <div className="bg-white rounded-t-[2rem] px-6 pt-8 pb-10 shadow-2xl">
-        <p className="text-center text-orange-900 font-semibold text-lg mb-1">
-          Begin Your Practice
-        </p>
-        <p className="text-center text-orange-400 text-sm mb-8">
-          Track your 10 daily spiritual activities
-        </p>
-
-        <button
-          onClick={handleLogin}
-          disabled={signingIn}
-          className="w-full h-14 flex items-center justify-center gap-3 bg-white border-2 border-orange-200 rounded-2xl text-orange-900 font-semibold text-base hover:bg-orange-50 hover:border-orange-400 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
-        >
-          {signingIn ? (
-            <Loader2 className="w-5 h-5 animate-spin text-orange-600" />
-          ) : (
-            <GoogleIcon />
-          )}
-          {signingIn ? 'Signing in…' : 'Continue with Google'}
-        </button>
-
-        <p className="text-xs text-orange-300 text-center mt-5 leading-relaxed">
-          By continuing, you agree to track your<br />daily spiritual activities with devotion
-        </p>
+      {/* ── Right panel — Mahant Swami Maharaj image ── */}
+      <div className="hidden md:block flex-1 relative overflow-hidden">
+        {loginImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={loginImage}
+            alt="Mahant Swami Maharaj"
+            className="absolute inset-0 w-full h-full object-cover object-center"
+          />
+        ) : (
+          /* Placeholder when no image is set */
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-orange-500 to-amber-600 flex flex-col items-center justify-center gap-6">
+            <BapsLogo className="w-40 h-40 opacity-30" />
+            <p className="text-white/50 text-sm font-medium text-center px-8">
+              Set the login image from<br />Admin → Settings → Login Image
+            </p>
+          </div>
+        )}
+        {/* Subtle gradient overlay on image for depth */}
+        {loginImage && (
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-600/20 via-transparent to-transparent pointer-events-none" />
+        )}
       </div>
     </div>
   )

@@ -56,6 +56,7 @@ export interface ReminderPref {
 export interface AppConfig {
   dailyQuote: string
   guruImages: string[]
+  loginImage?: string
   updatedAt?: Date
   updatedBy?: string
 }

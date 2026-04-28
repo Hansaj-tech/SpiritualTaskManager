@@ -175,6 +175,7 @@ export async function getAppConfig(): Promise<AppConfig> {
   return {
     dailyQuote: data.dailyQuote ?? '',
     guruImages: data.guruImages ?? [],
+    loginImage: data.loginImage ?? '',
     updatedAt: toDate(data.updatedAt) ?? undefined,
     updatedBy: data.updatedBy,
   }
@@ -241,4 +242,9 @@ export async function updateDailyQuote(quote: string): Promise<void> {
 export async function updateGuruImages(images: string[]): Promise<void> {
   const ref = doc(db, 'config', 'app')
   await setDoc(ref, { guruImages: images, updatedAt: serverTimestamp() }, { merge: true })
+}
+
+export async function updateLoginImage(url: string): Promise<void> {
+  const ref = doc(db, 'config', 'app')
+  await setDoc(ref, { loginImage: url, updatedAt: serverTimestamp() }, { merge: true })
 }
