@@ -38,7 +38,7 @@ export function FcmProvider({ children }: { children: ReactNode }) {
         if (Notification.permission === 'granted' && payload.notification) {
           new Notification(payload.notification.title ?? 'Aahanik', {
             body: payload.notification.body,
-            icon: '/icon.svg',
+            icon: '/icon-192x192.png',
           })
         }
       })

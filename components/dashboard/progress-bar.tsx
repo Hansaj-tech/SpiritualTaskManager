@@ -5,24 +5,27 @@ interface ProgressBarProps {
 
 export function ProgressBar({ completed, total }: ProgressBarProps) {
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0
+  const allDone = completed === total && total > 0
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-orange-100 px-5 py-4">
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-sm font-medium text-orange-900">Today&apos;s Progress</span>
-        <span className="text-sm font-semibold text-orange-600">
+    <div className={`rounded-3xl px-5 py-4 transition-all ${allDone ? 'bg-gradient-to-r from-orange-500 to-amber-500' : 'bg-white border border-orange-100 shadow-sm'}`}>
+      <div className="flex justify-between items-center mb-3">
+        <span className={`text-sm font-semibold ${allDone ? 'text-white' : 'text-orange-900'}`}>
+          {allDone ? '🎉 All Complete!' : "Today's Progress"}
+        </span>
+        <span className={`text-sm font-bold ${allDone ? 'text-white' : 'text-orange-600'}`}>
           {completed} / {total}
         </span>
       </div>
-      <div className="h-2 bg-orange-100 rounded-full overflow-hidden">
+      <div className={`h-2.5 rounded-full overflow-hidden ${allDone ? 'bg-white/20' : 'bg-orange-100'}`}>
         <div
-          className="h-full bg-orange-600 rounded-full transition-all duration-500"
+          className={`h-full rounded-full transition-all duration-700 ${allDone ? 'bg-white' : 'bg-gradient-to-r from-orange-500 to-amber-400'}`}
           style={{ width: `${pct}%` }}
         />
       </div>
-      {completed === total && total > 0 && (
-        <p className="text-xs text-orange-600 font-medium mt-2 text-center">
-          All activities complete! Jai Swaminarayan 🙏
+      {allDone && (
+        <p className="text-xs text-white/80 font-medium mt-2.5 text-center">
+          Jai Swaminarayan! Rajipo earned today 🙏
         </p>
       )}
     </div>

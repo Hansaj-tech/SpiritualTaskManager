@@ -9,26 +9,65 @@ interface StatsCardProps {
   guruImages: string[]
 }
 
-function StatBadge({ label, value, emoji }: { label: string; value: string | number; emoji: string }) {
+export function StatsCard({ rajipo, streak, todayPoints, guruImages }: StatsCardProps) {
   return (
-    <div className="flex flex-col items-center">
-      <span className="text-lg">{emoji}</span>
-      <span className="text-xl font-bold text-orange-900 leading-tight">{value}</span>
-      <span className="text-xs text-orange-500 font-medium">{label}</span>
+    <div className="bg-white rounded-3xl shadow-sm border border-orange-100 overflow-hidden">
+      {/* Guru image carousel */}
+      <GuruCarousel images={guruImages} />
+
+      {/* Stats row */}
+      <div className="grid grid-cols-3 py-4 px-3 gap-1">
+        <StatItem
+          value={rajipo.toLocaleString()}
+          label="Rajipo"
+          color="text-amber-600"
+          bg="bg-amber-50"
+          symbol="✨"
+        />
+        <StatItem
+          value={`${streak}`}
+          label="Day Streak"
+          color="text-orange-600"
+          bg="bg-orange-50"
+          symbol="🔥"
+          suffix="d"
+        />
+        <StatItem
+          value={`${todayPoints}`}
+          label="Today"
+          color="text-emerald-600"
+          bg="bg-emerald-50"
+          symbol="⭐"
+          suffix="pts"
+        />
+      </div>
     </div>
   )
 }
 
-export function StatsCard({ rajipo, streak, todayPoints, guruImages }: StatsCardProps) {
+function StatItem({
+  value,
+  label,
+  color,
+  bg,
+  symbol,
+  suffix,
+}: {
+  value: string
+  label: string
+  color: string
+  bg: string
+  symbol: string
+  suffix?: string
+}) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
-      <GuruCarousel images={guruImages} />
-
-      <div className="grid grid-cols-3 divide-x divide-orange-100 py-4 px-2">
-        <StatBadge label="Rajipo" value={rajipo} emoji="✨" />
-        <StatBadge label="Streak" value={`${streak}d`} emoji="🔥" />
-        <StatBadge label="Today" value={`${todayPoints}pts`} emoji="⭐" />
+    <div className={`flex flex-col items-center py-3 px-2 rounded-2xl ${bg}`}>
+      <span className="text-lg mb-0.5">{symbol}</span>
+      <div className="flex items-baseline gap-0.5">
+        <span className={`text-2xl font-bold ${color} leading-none`}>{value}</span>
+        {suffix && <span className={`text-xs font-semibold ${color} opacity-70`}>{suffix}</span>}
       </div>
+      <span className="text-xs text-gray-500 font-medium mt-1">{label}</span>
     </div>
   )
 }

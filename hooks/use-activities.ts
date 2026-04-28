@@ -14,7 +14,6 @@ import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/auth-context'
 import {
   getActivityDefs,
-  getAppConfig,
   saveActivityToggle,
   docToDayLog,
 } from '@/lib/firestore-helpers'
@@ -43,12 +42,25 @@ export function useActivities(): ActivityState {
   const [appConfig, setAppConfig] = useState<AppConfig>({ dailyQuote: '', guruImages: [] })
   const [loading, setLoading] = useState(true)
 
-  // Load static config on mount
+  // Load activity defs once on mount
   useEffect(() => {
-    Promise.all([getActivityDefs(), getAppConfig()]).then(([defs, config]) => {
+    getActivityDefs().then((defs) => {
       setActivityDefs(defs)
-      setAppConfig(config)
       setLoading(false)
+    })
+  }, [])
+
+  // Real-time listener for app config (guru images, daily quote)
+  useEffect(() => {
+    const configRef = doc(db, 'config', 'app')
+    return onSnapshot(configRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data()
+        setAppConfig({
+          dailyQuote: data.dailyQuote ?? '',
+          guruImages: data.guruImages ?? [],
+        })
+      }
     })
   }, [])
 

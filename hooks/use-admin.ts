@@ -1,10 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { collection, getDocs } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/auth-context'
-import type { UserProfile, ActivityId } from '@/types'
+import { docToUserProfile } from '@/lib/firestore-helpers'
+import type { ActivityId } from '@/types'
 
-export interface AdminUser extends Omit<UserProfile, 'fcmTokens'> {}
+export type AdminUser = Omit<UserProfile, 'fcmTokens'>
 
 export function useAdminUsers() {
   const { user } = useAuth()
@@ -15,27 +18,25 @@ export function useAdminUsers() {
   useEffect(() => {
     if (!user) return
     let cancelled = false
-    user.getIdToken().then((token) => {
-      fetch('/api/admin/users', {
-        headers: { Authorization: `Bearer ${token}` },
+
+    getDocs(collection(db, 'users'))
+      .then((snap) => {
+        if (cancelled) return
+        const list: AdminUser[] = snap.docs.map((d) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { fcmTokens, ...rest } = docToUserProfile(d.id, d.data())
+          return rest
+        })
+        list.sort((a, b) => (b.rajipo ?? 0) - (a.rajipo ?? 0))
+        setUsers(list)
+        setLoading(false)
       })
-        .then((r) => {
-          if (!r.ok) throw new Error(`HTTP ${r.status}`)
-          return r.json()
-        })
-        .then((data) => {
-          if (!cancelled) {
-            setUsers(data.users ?? [])
-            setLoading(false)
-          }
-        })
-        .catch((e: Error) => {
-          if (!cancelled) {
-            setError(e.message)
-            setLoading(false)
-          }
-        })
-    })
+      .catch((e: Error) => {
+        if (cancelled) return
+        setError(e.message)
+        setLoading(false)
+      })
+
     return () => { cancelled = true }
   }, [user])
 

@@ -23,8 +23,12 @@ export function UsersTable({ users, loading, error }: UsersTableProps) {
 
   if (error) {
     return (
-      <div className="text-center py-12 text-red-500 text-sm">
-        Failed to load users: {error}
+      <div className="text-center py-12 px-4">
+        <p className="text-red-500 text-sm font-semibold mb-1">Failed to load users</p>
+        <p className="text-red-400 text-xs break-all">{error}</p>
+        <p className="text-orange-400 text-xs mt-3">
+          Ensure FIREBASE_ADMIN_* env vars are set in Vercel.
+        </p>
       </div>
     )
   }
