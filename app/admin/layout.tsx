@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
@@ -7,8 +8,12 @@ import { Loader2, Users, Settings, ChevronLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const { userProfile, loading } = useAuth()
+  const { userProfile, loading, refreshProfile } = useAuth()
   const router = useRouter()
+
+  useEffect(() => {
+    refreshProfile()
+  }, [])
 
   if (loading) {
     return (
