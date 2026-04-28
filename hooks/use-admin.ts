@@ -11,6 +11,8 @@ import type { UserProfile, ActivityId } from '@/types'
 
 export type AdminUser = Omit<UserProfile, 'fcmTokens'>
 
+export type ActivityStats = Record<ActivityId, { done: number; total: number }>
+
 export function useAdminUsers() {
   const { user } = useAuth()
   const [users, setUsers] = useState<AdminUser[]>([])
@@ -45,10 +47,29 @@ export function useAdminUsers() {
   return { users, loading, error }
 }
 
+function countStats(
+  docs: Array<{ date: string; activities: Record<string, { done: boolean }> | undefined }>,
+  total: number
+): ActivityStats {
+  const counts: Record<string, number> = {}
+  for (const id of ACTIVITY_IDS) counts[id] = 0
+  for (const { activities } of docs) {
+    if (!activities) continue
+    for (const id of ACTIVITY_IDS) {
+      if (activities[id]?.done) counts[id]++
+    }
+  }
+  const result: Record<string, { done: number; total: number }> = {}
+  for (const id of ACTIVITY_IDS) result[id] = { done: counts[id], total }
+  return result as ActivityStats
+}
+
 export function useAdminUserDetail(uid: string) {
   const { user } = useAuth()
-  const [activityLog, setActivityLog] = useState<Record<ActivityId, { done: number; total: number }>>({} as never)
-  const [totalDays, setTotalDays] = useState(0)
+  const [monthlyLog, setMonthlyLog] = useState<ActivityStats>({} as ActivityStats)
+  const [lifetimeLog, setLifetimeLog] = useState<ActivityStats>({} as ActivityStats)
+  const [monthlyDays, setMonthlyDays] = useState(0)
+  const [lifetimeDays, setLifetimeDays] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -59,39 +80,37 @@ export function useAdminUserDetail(uid: string) {
     const now = new Date()
     const monthStart = format(startOfMonth(now), 'yyyy-MM-dd')
     const monthEnd = format(endOfMonth(now), 'yyyy-MM-dd')
-
     const logsRef = collection(db, 'users', uid, 'activityLogs')
-    const q = query(logsRef, where('date', '>=', monthStart), where('date', '<=', monthEnd))
 
-    getDocs(q).then((snap) => {
-      if (cancelled) return
-      const doneCounts: Record<string, number> = {}
-      for (const id of ACTIVITY_IDS) doneCounts[id] = 0
+    // Fetch all logs once, split into monthly and lifetime
+    getDocs(logsRef)
+      .then((snap) => {
+        if (cancelled) return
 
-      for (const doc of snap.docs) {
-        const activities = doc.data().activities as Record<string, { done: boolean }> | undefined
-        if (!activities) continue
-        for (const id of ACTIVITY_IDS) {
-          if (activities[id]?.done) doneCounts[id]++
-        }
-      }
+        const allDocs = snap.docs.map((d) => ({
+          date: d.data().date as string,
+          activities: d.data().activities as Record<string, { done: boolean }> | undefined,
+        }))
 
-      const log: Record<string, { done: number; total: number }> = {}
-      for (const id of ACTIVITY_IDS) {
-        log[id] = { done: doneCounts[id], total: snap.size }
-      }
-      setActivityLog(log as Record<ActivityId, { done: number; total: number }>)
-      setTotalDays(snap.size)
-      setLoading(false)
-    }).catch((e: Error) => {
-      if (!cancelled) {
-        setError(e.message)
+        const monthDocs = allDocs.filter(
+          (d) => d.date >= monthStart && d.date <= monthEnd
+        )
+
+        setLifetimeLog(countStats(allDocs, allDocs.length))
+        setMonthlyLog(countStats(monthDocs, monthDocs.length))
+        setLifetimeDays(allDocs.length)
+        setMonthlyDays(monthDocs.length)
         setLoading(false)
-      }
-    })
+      })
+      .catch((e: Error) => {
+        if (!cancelled) {
+          setError(e.message)
+          setLoading(false)
+        }
+      })
 
     return () => { cancelled = true }
   }, [user, uid])
 
-  return { activityLog, totalDays, loading, error }
+  return { monthlyLog, lifetimeLog, monthlyDays, lifetimeDays, loading, error }
 }
