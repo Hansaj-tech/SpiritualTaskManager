@@ -1,7 +1,7 @@
 'use client'
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { LogOut, User, MapPin, ChevronDown } from 'lucide-react'
+import { LogOut, User, ChevronDown } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { BapsLogo } from '@/components/baps-logo'
 
@@ -78,14 +78,6 @@ export function Navbar() {
                 <a href="/profile" className={`${itemCls} text-orange-800 hover:bg-orange-50`}>
                   <User className="w-4 h-4 text-orange-500" />
                   Edit Profile
-                </a>
-              </DropdownMenu.Item>
-
-              {/* Change Kshetra — native anchor */}
-              <DropdownMenu.Item asChild>
-                <a href="/onboarding" className={`${itemCls} text-orange-800 hover:bg-orange-50`}>
-                  <MapPin className="w-4 h-4 text-orange-500" />
-                  Change Kshetra
                 </a>
               </DropdownMenu.Item>
 
