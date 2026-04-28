@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { getAppConfig } from '@/lib/firestore-helpers'
 import { BapsLogo } from '@/components/baps-logo'
@@ -17,16 +17,49 @@ function GoogleIcon() {
   )
 }
 
+function getRotatingIndex(count: number): number {
+  if (count === 0) return 0
+  const intervalMs = 3 * 60 * 60 * 1000 // 3 hours
+  return Math.floor(Date.now() / intervalMs) % count
+}
+
 export default function LoginPage() {
   const { user, loading, loginWithGoogle } = useAuth()
   const [signingIn, setSigningIn] = useState(false)
-  const [loginImage, setLoginImage] = useState('')
+  const [loginImages, setLoginImages] = useState<string[]>([])
+  const [activeIdx, setActiveIdx] = useState(0)
+  const [prevIdx, setPrevIdx] = useState<number | null>(null)
+  const [fading, setFading] = useState(false)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     getAppConfig().then((cfg) => {
-      if (cfg.loginImage) setLoginImage(cfg.loginImage)
+      const imgs = cfg.loginImages ?? []
+      setLoginImages(imgs)
+      setActiveIdx(getRotatingIndex(imgs.length))
     })
   }, [])
+
+  // Check every minute if the 3-hour slot changed → crossfade
+  useEffect(() => {
+    if (loginImages.length <= 1) return
+    intervalRef.current = setInterval(() => {
+      const next = getRotatingIndex(loginImages.length)
+      setActiveIdx((cur) => {
+        if (next !== cur) {
+          setPrevIdx(cur)
+          setFading(true)
+          setTimeout(() => {
+            setPrevIdx(null)
+            setFading(false)
+          }, 800)
+          return next
+        }
+        return cur
+      })
+    }, 60_000)
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
+  }, [loginImages])
 
   useEffect(() => {
     if (!loading && user) {
@@ -51,33 +84,72 @@ export default function LoginPage() {
     )
   }
 
+  const currentImage = loginImages[activeIdx] ?? null
+  const previousImage = prevIdx !== null ? loginImages[prevIdx] : null
+
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
+    <div className="min-h-screen relative flex flex-col md:flex-row overflow-hidden">
+
+      {/* ── Background image layer (mobile only) ── */}
+      <div className="absolute inset-0 md:hidden">
+        {currentImage ? (
+          <>
+            {/* Previous image fading out */}
+            {previousImage && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={previousImage}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover object-center"
+                style={{ opacity: fading ? 0 : 1, transition: 'opacity 0.8s ease' }}
+              />
+            )}
+            {/* Current image */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={currentImage}
+              alt="Mahant Swami Maharaj"
+              className="absolute inset-0 w-full h-full object-cover object-center"
+              style={{ opacity: 1 }}
+            />
+          </>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-orange-500 to-amber-600" />
+        )}
+        {/* Dark gradient overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-black/70" />
+      </div>
+
       {/* ── Left panel — saffron brand + login form ── */}
-      <div className="flex flex-col bg-orange-600 md:w-[420px] md:min-h-screen md:flex-shrink-0">
-        {/* Hero */}
-        <div className="flex flex-col items-center justify-center flex-1 px-8 pt-14 pb-8">
-          <div className="w-28 h-28 rounded-full bg-white/15 flex items-center justify-center mb-6 shadow-2xl ring-4 ring-white/20 p-4">
+      <div className="relative z-10 flex flex-col md:bg-orange-600 md:w-[420px] md:min-h-screen md:flex-shrink-0">
+
+        {/* Top brand section (mobile: floating over image; desktop: in saffron panel) */}
+        <div className="flex flex-col items-center justify-center flex-1 px-8 pt-16 pb-4 md:pt-14 md:pb-8">
+          <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-white/15 flex items-center justify-center mb-5 shadow-2xl ring-4 ring-white/20 p-4">
             <BapsLogo className="w-full h-full" />
           </div>
-          <h1 className="text-4xl font-bold text-white tracking-tight mb-2">Aahanik</h1>
-          <p className="text-orange-100 text-base text-center leading-relaxed">
+          <h1 className="text-4xl font-bold text-white tracking-tight mb-2 drop-shadow-lg">Aahanik</h1>
+          <p className="text-white/90 text-base text-center leading-relaxed drop-shadow">
             Daily Spiritual Practice Tracker
           </p>
-          <p className="text-orange-200 text-sm mt-1">॥ Jai Swaminarayan ॥</p>
+          <p className="text-white/70 text-sm mt-1 drop-shadow">॥ Jai Swaminarayan ॥</p>
 
-          <div className="flex gap-2 mt-8">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className={`rounded-full bg-white ${i === 1 ? 'w-6 h-2' : 'w-2 h-2 opacity-50'}`}
-              />
-            ))}
-          </div>
+          {loginImages.length > 1 && (
+            <div className="flex gap-1.5 mt-6">
+              {loginImages.map((_, i) => (
+                <div
+                  key={i}
+                  className={`rounded-full bg-white transition-all duration-500 ${
+                    i === activeIdx ? 'w-5 h-2 opacity-100' : 'w-2 h-2 opacity-40'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Login card — white rounded panel */}
-        <div className="bg-white rounded-t-[2rem] md:rounded-none md:rounded-tr-[2rem] px-6 pt-8 pb-10 shadow-2xl">
+        <div className="bg-white rounded-t-[2rem] md:rounded-none md:rounded-tr-[2rem] px-6 pt-8 pb-safe-10 pb-10 shadow-2xl">
           <p className="text-center text-orange-900 font-semibold text-lg mb-1">
             Begin Your Practice
           </p>
@@ -104,26 +176,33 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* ── Right panel — Mahant Swami Maharaj image ── */}
+      {/* ── Right panel — rotating image (desktop only) ── */}
       <div className="hidden md:block flex-1 relative overflow-hidden">
-        {loginImage ? (
+        {previousImage && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={loginImage}
+            src={previousImage}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-center"
+            style={{ opacity: fading ? 0 : 1, transition: 'opacity 0.8s ease' }}
+          />
+        )}
+        {currentImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={currentImage}
             alt="Mahant Swami Maharaj"
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
         ) : (
-          /* Placeholder when no image is set */
           <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-orange-500 to-amber-600 flex flex-col items-center justify-center gap-6">
             <BapsLogo className="w-40 h-40 opacity-30" />
             <p className="text-white/50 text-sm font-medium text-center px-8">
-              Set the login image from<br />Admin → Settings → Login Image
+              Set login images from<br />Admin → Settings → Images
             </p>
           </div>
         )}
-        {/* Subtle gradient overlay on image for depth */}
-        {loginImage && (
+        {currentImage && (
           <div className="absolute inset-0 bg-gradient-to-r from-orange-600/20 via-transparent to-transparent pointer-events-none" />
         )}
       </div>

@@ -39,7 +39,7 @@ export function useActivities(): ActivityState {
   const [activityDefs, setActivityDefs] = useState<ActivityDefinition[]>([])
   const [todayLog, setTodayLog] = useState<DayLog>(emptyLog)
   const [activityStreaks, setActivityStreaks] = useState<Record<string, number>>({})
-  const [appConfig, setAppConfig] = useState<AppConfig>({ dailyQuote: '', guruImages: [] })
+  const [appConfig, setAppConfig] = useState<AppConfig>({ dailyQuote: '', guruImages: [], loginImages: [] })
   const [loading, setLoading] = useState(true)
 
   // Load activity defs once on mount
@@ -59,6 +59,7 @@ export function useActivities(): ActivityState {
         setAppConfig({
           dailyQuote: data.dailyQuote ?? '',
           guruImages: data.guruImages ?? [],
+          loginImages: data.loginImages ?? (data.loginImage ? [data.loginImage] : []),
         })
       }
     })

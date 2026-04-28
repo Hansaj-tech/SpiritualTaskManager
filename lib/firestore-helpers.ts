@@ -169,13 +169,15 @@ export async function getAppConfig(): Promise<AppConfig> {
   const ref = doc(db, 'config', 'app')
   const snap = await getDoc(ref)
   if (!snap.exists()) {
-    return { dailyQuote: 'May your seva bring peace and Rajipo.', guruImages: [] }
+    return { dailyQuote: 'May your seva bring peace and Rajipo.', guruImages: [], loginImages: [] }
   }
   const data = snap.data()
+  // backward-compat: if old single loginImage string exists, wrap it
+  const loginImages: string[] = data.loginImages ?? (data.loginImage ? [data.loginImage] : [])
   return {
     dailyQuote: data.dailyQuote ?? '',
     guruImages: data.guruImages ?? [],
-    loginImage: data.loginImage ?? '',
+    loginImages,
     updatedAt: toDate(data.updatedAt) ?? undefined,
     updatedBy: data.updatedBy,
   }
@@ -244,7 +246,7 @@ export async function updateGuruImages(images: string[]): Promise<void> {
   await setDoc(ref, { guruImages: images, updatedAt: serverTimestamp() }, { merge: true })
 }
 
-export async function updateLoginImage(url: string): Promise<void> {
+export async function updateLoginImages(images: string[]): Promise<void> {
   const ref = doc(db, 'config', 'app')
-  await setDoc(ref, { loginImage: url, updatedAt: serverTimestamp() }, { merge: true })
+  await setDoc(ref, { loginImages: images, updatedAt: serverTimestamp() }, { merge: true })
 }
