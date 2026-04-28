@@ -8,6 +8,7 @@ import { Loader2, Check } from 'lucide-react'
 
 export function KshetraGrid() {
   const { userProfile, updateKshetra } = useAuth()
+  const isChanging = !!userProfile?.kshetra
   const [selected, setSelected] = useState<string | null>(userProfile?.kshetra ?? null)
   const [saving, setSaving] = useState(false)
 
@@ -66,7 +67,7 @@ export function KshetraGrid() {
         )}
       >
         {saving && <Loader2 className="w-5 h-5 animate-spin" />}
-        {saving ? 'Setting up…' : 'Begin Journey'}
+        {saving ? 'Saving…' : isChanging ? 'Save Kshetra' : 'Begin Journey'}
       </button>
     </div>
   )

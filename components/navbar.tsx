@@ -87,7 +87,7 @@ export function Navbar() {
 
               <DropdownMenu.Item
                 className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-orange-800 rounded-xl hover:bg-orange-50 cursor-pointer outline-none transition-colors"
-                onSelect={() => { window.location.href = '/profile' }}
+                onSelect={() => { window.location.href = '/onboarding' }}
               >
                 <MapPin className="w-4 h-4 text-orange-500" />
                 Change Kshetra

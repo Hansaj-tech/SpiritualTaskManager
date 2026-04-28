@@ -4,15 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
-import { KSHETRA_OPTIONS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 export function ProfileForm() {
-  const { userProfile, updateProfile, updateKshetra } = useAuth()
+  const { userProfile, updateProfile } = useAuth()
   const router = useRouter()
   const [displayName, setDisplayName] = useState(userProfile?.displayName ?? '')
   const [photoURL, setPhotoURL] = useState(userProfile?.photoURL ?? '')
-  const [kshetra, setKshetra] = useState<string>(userProfile?.kshetra ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -22,9 +20,6 @@ export function ProfileForm() {
       displayName: displayName.trim() || undefined,
       photoURL: photoURL.trim() || null,
     })
-    if (kshetra && kshetra !== userProfile?.kshetra) {
-      await updateKshetra(kshetra)
-    }
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -70,28 +65,6 @@ export function ProfileForm() {
           placeholder="https://example.com/photo.jpg"
           className="w-full h-11 px-4 rounded-xl border-2 border-orange-200 text-orange-900 bg-white focus:outline-none focus:border-orange-600 text-sm"
         />
-      </div>
-
-      {/* Kshetra */}
-      <div>
-        <label className="text-sm font-medium text-orange-900 mb-2 block">Kshetra</label>
-        <div className="grid grid-cols-4 gap-2">
-          {KSHETRA_OPTIONS.map((k) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setKshetra(k)}
-              className={cn(
-                'h-10 rounded-xl border-2 font-semibold text-sm transition-all',
-                kshetra === k
-                  ? 'border-orange-600 bg-orange-600 text-white shadow-md'
-                  : 'border-orange-100 bg-orange-50 text-orange-700 hover:border-orange-300'
-              )}
-            >
-              {k}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Email (read-only) */}

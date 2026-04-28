@@ -6,7 +6,8 @@ import { BapsLogo } from '@/components/baps-logo'
 import { Loader2 } from 'lucide-react'
 
 export default function OnboardingPage() {
-  const { loading } = useAuth()
+  const { userProfile, loading } = useAuth()
+  const isChanging = !!userProfile?.kshetra
 
   if (loading) {
     return (
@@ -23,9 +24,13 @@ export default function OnboardingPage() {
         <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center mb-5 shadow-lg p-2">
           <BapsLogo className="w-full h-full" />
         </div>
-        <h1 className="text-2xl font-bold text-white">Welcome to Aahanik</h1>
+        <h1 className="text-2xl font-bold text-white">
+          {isChanging ? 'Change Kshetra' : 'Welcome to Aahanik'}
+        </h1>
         <p className="text-orange-100 text-sm mt-2 leading-relaxed">
-          Select your Kshetra to get started<br />with your spiritual journey
+          {isChanging
+            ? `Currently: ${userProfile?.kshetra} — select a new one below`
+            : <>Select your Kshetra to get started<br />with your spiritual journey</>}
         </p>
       </div>
 
