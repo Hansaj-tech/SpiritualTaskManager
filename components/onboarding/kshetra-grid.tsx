@@ -7,28 +7,15 @@ import { cn } from '@/lib/utils'
 import { Loader2, Check } from 'lucide-react'
 
 export function KshetraGrid() {
-  const { user, userProfile, updateKshetra } = useAuth()
-  const isChanging = !!userProfile?.kshetra
-  const [selected, setSelected] = useState<string | null>(userProfile?.kshetra ?? null)
+  const { updateKshetra } = useAuth()
+  const [selected, setSelected] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   async function handleContinue() {
     if (!selected) return
-    if (!user) {
-      setError('Not signed in. Please refresh and try again.')
-      return
-    }
-    setError(null)
     setSaving(true)
-    try {
-      await updateKshetra(selected)
-      window.location.href = '/dashboard'
-    } catch (e) {
-      console.error('Kshetra save error:', e)
-      setError('Failed to save. Please try again.')
-      setSaving(false)
-    }
+    await updateKshetra(selected)
+    window.location.href = '/dashboard'
   }
 
   return (
@@ -68,10 +55,6 @@ export function KshetraGrid() {
         </p>
       )}
 
-      {error && (
-        <p className="text-center text-sm text-red-500 bg-red-50 rounded-xl px-3 py-2">{error}</p>
-      )}
-
       <button
         onClick={handleContinue}
         disabled={!selected || saving}
@@ -83,7 +66,7 @@ export function KshetraGrid() {
         )}
       >
         {saving && <Loader2 className="w-5 h-5 animate-spin" />}
-        {saving ? 'Saving…' : isChanging ? 'Save Kshetra' : 'Begin Journey'}
+        {saving ? 'Setting up…' : 'Begin Journey'}
       </button>
     </div>
   )

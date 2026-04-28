@@ -1,14 +1,14 @@
 'use client'
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+import { useRouter } from 'next/navigation'
 import { LogOut, User, ChevronDown } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { BapsLogo } from '@/components/baps-logo'
 
-const itemCls = 'flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-xl cursor-pointer outline-none transition-colors'
-
 export function Navbar() {
   const { userProfile, logout } = useAuth()
+  const router = useRouter()
 
   const initials = (userProfile?.displayName ?? 'U')
     .split(' ')
@@ -19,7 +19,7 @@ export function Navbar() {
 
   async function handleLogout() {
     await logout()
-    window.location.href = '/login'
+    router.push('/login')
   }
 
   return (
@@ -40,7 +40,11 @@ export function Navbar() {
               <div className="w-8 h-8 rounded-lg bg-orange-100 overflow-hidden flex items-center justify-center text-orange-800 font-bold text-sm ring-2 ring-orange-200 group-hover:ring-orange-300 transition-all">
                 {userProfile?.photoURL ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={userProfile.photoURL} alt={userProfile.displayName} className="w-full h-full object-cover" />
+                  <img
+                    src={userProfile.photoURL}
+                    alt={userProfile.displayName}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   initials
                 )}
@@ -67,24 +71,26 @@ export function Navbar() {
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-orange-900 truncate">{userProfile?.displayName}</p>
+                    <p className="text-sm font-semibold text-orange-900 truncate">
+                      {userProfile?.displayName}
+                    </p>
                     <p className="text-xs text-orange-400 truncate">{userProfile?.kshetra}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Edit Profile — native anchor so Radix can't block navigation */}
-              <DropdownMenu.Item asChild>
-                <a href="/profile" className={`${itemCls} text-orange-800 hover:bg-orange-50`}>
-                  <User className="w-4 h-4 text-orange-500" />
-                  Edit Profile
-                </a>
+              <DropdownMenu.Item
+                className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-orange-800 rounded-xl hover:bg-orange-50 cursor-pointer outline-none transition-colors"
+                onSelect={() => router.push('/profile')}
+              >
+                <User className="w-4 h-4 text-orange-500" />
+                Edit Profile
               </DropdownMenu.Item>
 
               <DropdownMenu.Separator className="h-px bg-orange-100 my-1" />
 
               <DropdownMenu.Item
-                className={`${itemCls} text-red-500 hover:bg-red-50`}
+                className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-500 rounded-xl hover:bg-red-50 cursor-pointer outline-none transition-colors"
                 onSelect={handleLogout}
               >
                 <LogOut className="w-4 h-4" />

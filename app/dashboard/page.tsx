@@ -30,7 +30,7 @@ export default function DashboardPage() {
     .map(([id]) => id)
 
   const activityNames = Object.fromEntries(activityDefs.map((a) => [a.id, a.name]))
-  const { reminders, setReminder, alerts, dismissAlert } = useReminders(doneIds, activityNames)
+  const { reminders, setReminder } = useReminders(doneIds, activityNames)
   const [openReminderId, setOpenReminderId] = useState<string | null>(null)
   const [notifDismissed, setNotifDismissed] = useState(false)
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>('default')
@@ -76,22 +76,6 @@ export default function DashboardPage() {
             {getGreeting()}, {userProfile?.displayName?.split(' ')[0] ?? 'Devotee'} 🙏
           </h1>
         </div>
-
-        {/* In-app reminder alerts */}
-        {alerts.map((alert) => (
-          <div key={alert.activityId} className="bg-orange-600 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-md">
-            <Bell className="w-5 h-5 text-white flex-shrink-0" />
-            <p className="flex-1 text-sm font-semibold text-white">
-              Time for {alert.name} 🙏
-            </p>
-            <button
-              onClick={() => dismissAlert(alert.activityId)}
-              className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 flex-shrink-0"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        ))}
 
         {/* Notification permission banner */}
         {showNotifBanner && (

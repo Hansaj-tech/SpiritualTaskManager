@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Check } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { KSHETRA_OPTIONS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
@@ -12,30 +12,22 @@ export function ProfileForm() {
   const router = useRouter()
   const [displayName, setDisplayName] = useState(userProfile?.displayName ?? '')
   const [photoURL, setPhotoURL] = useState(userProfile?.photoURL ?? '')
-  const [kshetra, setKshetra] = useState<string>(userProfile?.kshetra ?? '')
+  const [selectedKshetra, setSelectedKshetra] = useState<string | null>(userProfile?.kshetra ?? null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   async function handleSave() {
-    setError(null)
     setSaving(true)
-    try {
-      await updateProfile({
-        displayName: displayName.trim() || undefined,
-        photoURL: photoURL.trim() || null,
-      })
-      if (kshetra && kshetra !== userProfile?.kshetra) {
-        await updateKshetra(kshetra)
-      }
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
-    } catch (e) {
-      console.error('Profile save error:', e)
-      setError('Failed to save. Please try again.')
-    } finally {
-      setSaving(false)
+    await updateProfile({
+      displayName: displayName.trim() || undefined,
+      photoURL: photoURL.trim() || null,
+    })
+    if (selectedKshetra && selectedKshetra !== userProfile?.kshetra) {
+      await updateKshetra(selectedKshetra)
     }
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
   }
 
   return (
@@ -80,28 +72,6 @@ export function ProfileForm() {
         />
       </div>
 
-      {/* Kshetra */}
-      <div>
-        <label className="text-sm font-medium text-orange-900 mb-2 block">Kshetra</label>
-        <div className="grid grid-cols-4 gap-2">
-          {KSHETRA_OPTIONS.map((k) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setKshetra(k)}
-              className={cn(
-                'h-10 rounded-xl border-2 font-semibold text-sm transition-all',
-                kshetra === k
-                  ? 'border-orange-600 bg-orange-600 text-white shadow-md'
-                  : 'border-orange-100 bg-orange-50 text-orange-700 hover:border-orange-300'
-              )}
-            >
-              {k}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Email (read-only) */}
       <div>
         <label className="text-sm font-medium text-orange-900 mb-1.5 block">Email</label>
@@ -110,16 +80,42 @@ export function ProfileForm() {
         </div>
       </div>
 
-      {error && (
-        <p className="text-sm text-red-500 bg-red-50 rounded-xl px-3 py-2 text-center">{error}</p>
-      )}
+      {/* Kshetra */}
+      <div>
+        <label className="text-sm font-medium text-orange-900 mb-2 block">Kshetra</label>
+        <div className="grid grid-cols-4 gap-2">
+          {KSHETRA_OPTIONS.map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setSelectedKshetra(k)}
+              className={cn(
+                'relative h-11 rounded-xl border-2 font-semibold text-sm transition-all',
+                'flex items-center justify-center',
+                selectedKshetra === k
+                  ? 'border-orange-600 bg-orange-600 text-white shadow-md'
+                  : 'border-orange-100 bg-orange-50 text-orange-800 hover:border-orange-300'
+              )}
+            >
+              {selectedKshetra === k && (
+                <span className="absolute top-1 right-1">
+                  <Check className="w-2.5 h-2.5 text-white/70" strokeWidth={3} />
+                </span>
+              )}
+              {k}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <button
         onClick={handleSave}
         disabled={saving}
         className={cn(
           'w-full h-12 rounded-xl font-semibold text-white transition-all flex items-center justify-center gap-2',
-          saved ? 'bg-green-500' : 'bg-orange-600 hover:bg-orange-700 active:scale-95',
+          saved
+            ? 'bg-green-500'
+            : 'bg-orange-600 hover:bg-orange-700 active:scale-95',
           'disabled:opacity-60 disabled:active:scale-100'
         )}
       >

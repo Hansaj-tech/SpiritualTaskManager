@@ -111,6 +111,7 @@ export function ReminderModal({
             </div>
           )}
 
+          {/* Save button */}
           <button
             onClick={handleSave}
             disabled={saving}
