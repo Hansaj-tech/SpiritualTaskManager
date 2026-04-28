@@ -187,7 +187,7 @@ export async function saveReminder(uid: string, pref: ReminderPref): Promise<voi
 
 export async function updateUserKshetra(uid: string, kshetra: string): Promise<void> {
   const ref = doc(db, 'users', uid)
-  await setDoc(ref, { kshetra, updatedAt: serverTimestamp() }, { merge: true })
+  await updateDoc(ref, { kshetra, updatedAt: serverTimestamp() })
 }
 
 export async function updateUserProfileData(

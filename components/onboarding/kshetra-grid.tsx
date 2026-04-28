@@ -7,16 +7,28 @@ import { cn } from '@/lib/utils'
 import { Loader2, Check } from 'lucide-react'
 
 export function KshetraGrid() {
-  const { userProfile, updateKshetra } = useAuth()
+  const { user, userProfile, updateKshetra } = useAuth()
   const isChanging = !!userProfile?.kshetra
   const [selected, setSelected] = useState<string | null>(userProfile?.kshetra ?? null)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleContinue() {
     if (!selected) return
+    if (!user) {
+      setError('Not signed in. Please refresh and try again.')
+      return
+    }
+    setError(null)
     setSaving(true)
-    await updateKshetra(selected)
-    window.location.href = '/dashboard'
+    try {
+      await updateKshetra(selected)
+      window.location.href = '/dashboard'
+    } catch (e) {
+      console.error('Kshetra save error:', e)
+      setError('Failed to save. Please try again.')
+      setSaving(false)
+    }
   }
 
   return (
@@ -54,6 +66,10 @@ export function KshetraGrid() {
         <p className="text-center text-sm text-orange-500">
           Selected: <span className="font-semibold text-orange-700">{selected}</span>
         </p>
+      )}
+
+      {error && (
+        <p className="text-center text-sm text-red-500 bg-red-50 rounded-xl px-3 py-2">{error}</p>
       )}
 
       <button
