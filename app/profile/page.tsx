@@ -8,17 +8,17 @@ export default function ProfilePage() {
   const router = useRouter()
 
   return (
-    <div className="min-h-screen bg-orange-50">
+    <div className="min-h-screen bg-orange-50 dark:bg-stone-950">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white border-b border-orange-100 shadow-sm">
+      <header className="sticky top-0 z-40 bg-white dark:bg-stone-900 border-b border-orange-100 dark:border-stone-700 shadow-sm">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="w-8 h-8 rounded-full hover:bg-orange-50 flex items-center justify-center text-orange-600"
+            className="w-8 h-8 rounded-full hover:bg-orange-50 dark:hover:bg-stone-800 flex items-center justify-center text-orange-600"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="font-semibold text-orange-900">Edit Profile</h1>
+          <h1 className="font-semibold text-orange-900 dark:text-orange-50">Edit Profile</h1>
         </div>
       </header>
 

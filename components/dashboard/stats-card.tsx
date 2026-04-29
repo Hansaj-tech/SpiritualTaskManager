@@ -11,7 +11,7 @@ interface StatsCardProps {
 
 export function StatsCard({ rajipo, streak, todayPoints, guruImages }: StatsCardProps) {
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-orange-100 overflow-hidden">
+    <div className="bg-white dark:bg-stone-900 rounded-3xl shadow-sm border border-orange-100 dark:border-stone-700 overflow-hidden">
       {/* Guru image carousel */}
       <GuruCarousel images={guruImages} />
 
@@ -21,14 +21,14 @@ export function StatsCard({ rajipo, streak, todayPoints, guruImages }: StatsCard
           value={rajipo.toLocaleString()}
           label="Rajipo"
           color="text-amber-600"
-          bg="bg-amber-50"
+          bg="bg-amber-50 dark:bg-amber-900/20"
           symbol="✨"
         />
         <StatItem
           value={`${streak}`}
           label="Day Streak"
           color="text-orange-600"
-          bg="bg-orange-50"
+          bg="bg-orange-50 dark:bg-stone-800"
           symbol="🔥"
           suffix="d"
         />
@@ -36,7 +36,7 @@ export function StatsCard({ rajipo, streak, todayPoints, guruImages }: StatsCard
           value={`${todayPoints}`}
           label="Today"
           color="text-emerald-600"
-          bg="bg-emerald-50"
+          bg="bg-emerald-50 dark:bg-emerald-900/20"
           symbol="⭐"
           suffix="pts"
         />
@@ -67,7 +67,7 @@ function StatItem({
         <span className={`text-2xl font-bold ${color} leading-none`}>{value}</span>
         {suffix && <span className={`text-xs font-semibold ${color} opacity-70`}>{suffix}</span>}
       </div>
-      <span className="text-xs text-gray-500 font-medium mt-1">{label}</span>
+      <span className="text-xs text-gray-500 dark:text-stone-400 font-medium mt-1">{label}</span>
     </div>
   )
 }

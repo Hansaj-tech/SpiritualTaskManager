@@ -28,7 +28,7 @@ export function ActivityRow({
     <div
       className={cn(
         'flex items-center gap-3 px-4 py-3.5 transition-all duration-200',
-        done && 'bg-orange-50/60'
+        done && 'bg-orange-50/60 dark:bg-stone-800/60'
       )}
     >
       {/* Checkbox */}
@@ -39,7 +39,7 @@ export function ActivityRow({
           'w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 outline-none',
           done
             ? 'border-orange-500 bg-orange-500 shadow-sm'
-            : 'border-orange-200 bg-white hover:border-orange-400 active:scale-95'
+            : 'border-orange-200 dark:border-stone-600 bg-white dark:bg-stone-800 hover:border-orange-400 active:scale-95'
         )}
       >
         <Checkbox.Indicator>
@@ -52,7 +52,7 @@ export function ActivityRow({
         <span
           className={cn(
             'text-sm font-medium block truncate',
-            done ? 'text-orange-300 line-through' : 'text-orange-900'
+            done ? 'text-orange-300 line-through' : 'text-orange-900 dark:text-orange-50'
           )}
         >
           {activity.name}
@@ -70,8 +70,8 @@ export function ActivityRow({
         className={cn(
           'flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-medium transition-all',
           reminder?.enabled
-            ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-            : 'text-orange-200 hover:text-orange-400 hover:bg-orange-50'
+            ? 'bg-orange-100 dark:bg-stone-700 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-stone-600'
+            : 'text-orange-200 dark:text-stone-600 hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-stone-800'
         )}
         title="Set reminder"
       >
@@ -88,7 +88,7 @@ export function ActivityRow({
       {/* Points badge */}
       <span className={cn(
         'text-xs font-bold px-2 py-1 rounded-lg flex-shrink-0',
-        done ? 'text-orange-400 bg-orange-100' : 'text-orange-500 bg-orange-50'
+        done ? 'text-orange-400 bg-orange-100 dark:bg-stone-700' : 'text-orange-500 bg-orange-50 dark:bg-stone-800'
       )}>
         +{activity.points}
       </span>

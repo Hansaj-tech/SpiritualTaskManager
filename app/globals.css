@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: any element inside .dark gets dark: variants */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   /* Saffron color palette */
   --color-saffron-50: #fff8f0;
@@ -42,6 +45,11 @@ body {
   color: #1a0f00;
   font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+.dark body {
+  background-color: #0c0a09;
+  color: #fff8f0;
 }
 
 /* Safe area for mobile */

@@ -48,8 +48,10 @@ export default function LoginPage() {
       {/* Hero section */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 pt-16 pb-8">
         {/* BAPS logo */}
-        <div className="w-28 h-28 rounded-full bg-white/15 flex items-center justify-center mb-6 shadow-2xl ring-4 ring-white/20 p-4">
-          <BapsLogo className="w-full h-full" />
+        <div className="w-28 h-28 rounded-full bg-white/20 flex items-center justify-center mb-6 shadow-2xl ring-4 ring-white/20">
+          <div className="w-24 h-24 rounded-full overflow-hidden bg-white flex items-center justify-center">
+            <BapsLogo className="w-full h-full object-cover" />
+          </div>
         </div>
 
         {/* App name */}

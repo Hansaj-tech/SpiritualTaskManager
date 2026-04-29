@@ -68,7 +68,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-orange-50/70">
+    <div className="min-h-screen bg-orange-50/70 dark:bg-stone-950">
       <Navbar />
 
       <main className="max-w-lg mx-auto px-4 py-4 flex flex-col gap-3 pb-10">
@@ -77,19 +77,19 @@ export default function DashboardPage() {
           <p className="text-xs text-orange-400 font-medium uppercase tracking-wider">
             {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
-          <h1 className="text-xl font-bold text-orange-900 mt-0.5">
+          <h1 className="text-xl font-bold text-orange-900 dark:text-orange-50 mt-0.5">
             {getGreeting()}, {userProfile?.displayName?.split(' ')[0] ?? 'Devotee'} 🙏
           </h1>
         </div>
 
         {/* Notification permission banner */}
         {showNotifBanner && (
-          <div className="bg-white rounded-2xl border border-orange-100 px-4 py-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+          <div className="bg-white dark:bg-stone-900 rounded-2xl border border-orange-100 dark:border-stone-700 px-4 py-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-orange-100 dark:bg-stone-800 flex items-center justify-center flex-shrink-0">
               <Bell className="w-4 h-4 text-orange-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-orange-900">Enable Reminders</p>
+              <p className="text-sm font-semibold text-orange-900 dark:text-orange-50">Enable Reminders</p>
               <p className="text-xs text-orange-400">Get notified for your daily activities</p>
             </div>
             <button
@@ -109,12 +109,12 @@ export default function DashboardPage() {
 
         {/* Sunday weekly progress banner */}
         {weeklyTaskCount !== null && !weeklyBannerDismissed && (
-          <div className="bg-white rounded-2xl border border-orange-100 px-4 py-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+          <div className="bg-white dark:bg-stone-900 rounded-2xl border border-orange-100 dark:border-stone-700 px-4 py-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-orange-100 dark:bg-stone-800 flex items-center justify-center flex-shrink-0">
               <CalendarDays className="w-4 h-4 text-orange-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-orange-900">Weekly Summary</p>
+              <p className="text-sm font-semibold text-orange-900 dark:text-orange-50">Weekly Summary</p>
               <p className="text-xs text-orange-600">
                 You have completed {weeklyTaskCount} / 70 tasks this week 🙏
               </p>
@@ -145,14 +145,14 @@ export default function DashboardPage() {
         )}
 
         {/* Activity list */}
-        <div className="bg-white rounded-3xl shadow-sm border border-orange-100 overflow-hidden">
-          <div className="px-4 py-3.5 border-b border-orange-50 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-orange-900">Today&apos;s Aahanik</h2>
+        <div className="bg-white dark:bg-stone-900 rounded-3xl shadow-sm border border-orange-100 dark:border-stone-700 overflow-hidden">
+          <div className="px-4 py-3.5 border-b border-orange-50 dark:border-stone-800 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-orange-900 dark:text-orange-50">Today&apos;s Aahanik</h2>
             <span className="text-xs text-orange-400 font-medium">
               {completedCount}/{activityDefs.length} done
             </span>
           </div>
-          <div className="divide-y divide-orange-50">
+          <div className="divide-y divide-orange-50 dark:divide-stone-800">
             {activityDefs.map((activity) => (
               <ActivityRow
                 key={activity.id}

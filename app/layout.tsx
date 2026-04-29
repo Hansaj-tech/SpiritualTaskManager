@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/contexts/auth-context'
 import { FcmProvider } from '@/contexts/fcm-context'
+import { ThemeProvider } from '@/contexts/theme-context'
 
 export const metadata: Metadata = {
   title: 'Aahanik - Spiritual Task Manager',
@@ -34,12 +35,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full">
+      <head>
+        {/* Prevent flash of wrong theme before React hydrates */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var s=localStorage.getItem('aahanik-theme');var d=s!==null?s==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;if(d)document.documentElement.classList.add('dark');}catch(e){}})();` }} />
+      </head>
       <body className="h-full">
-        <AuthProvider>
-          <FcmProvider>
-            {children}
-          </FcmProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <FcmProvider>
+              {children}
+            </FcmProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

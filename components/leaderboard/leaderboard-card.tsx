@@ -26,7 +26,7 @@ function EntryRow({ entry, compact = false }: { entry: LeaderboardEntry; compact
     <div
       className={cn(
         'flex items-center gap-3 px-4 py-2.5 transition-colors',
-        entry.isCurrentUser && 'bg-orange-50',
+        entry.isCurrentUser && 'bg-orange-50 dark:bg-stone-800',
         compact && 'py-2'
       )}
     >
@@ -34,14 +34,14 @@ function EntryRow({ entry, compact = false }: { entry: LeaderboardEntry; compact
       <div
         className={cn(
           'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0',
-          rankStyle ? rankStyle.badge : 'bg-orange-100 text-orange-600'
+          rankStyle ? rankStyle.badge : 'bg-orange-100 dark:bg-stone-700 text-orange-600 dark:text-orange-400'
         )}
       >
         {entry.rank}
       </div>
 
       {/* Avatar */}
-      <div className="w-8 h-8 rounded-lg bg-orange-100 overflow-hidden flex items-center justify-center text-orange-800 font-bold text-xs flex-shrink-0">
+      <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-stone-700 overflow-hidden flex items-center justify-center text-orange-800 dark:text-orange-200 font-bold text-xs flex-shrink-0">
         {entry.photoURL ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={entry.photoURL} alt="" className="w-full h-full object-cover" />
@@ -52,7 +52,7 @@ function EntryRow({ entry, compact = false }: { entry: LeaderboardEntry; compact
 
       {/* Name */}
       <div className="flex-1 min-w-0">
-        <p className={cn('text-sm font-semibold text-orange-900 truncate', entry.isCurrentUser && 'text-orange-700')}>
+        <p className={cn('text-sm font-semibold text-orange-900 dark:text-orange-50 truncate', entry.isCurrentUser && 'text-orange-700 dark:text-orange-300')}>
           {entry.displayName}
           {entry.isCurrentUser && (
             <span className="ml-1.5 text-xs font-normal text-orange-400">(you)</span>
@@ -81,13 +81,13 @@ function EntryRow({ entry, compact = false }: { entry: LeaderboardEntry; compact
 
 function UserView({ data }: { data: Extract<LeaderboardData, { isAdmin: false }> }) {
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-orange-100 overflow-hidden">
-      <div className="px-4 py-3.5 border-b border-orange-50 flex items-center justify-between">
+    <div className="bg-white dark:bg-stone-900 rounded-3xl shadow-sm border border-orange-100 dark:border-stone-700 overflow-hidden">
+      <div className="px-4 py-3.5 border-b border-orange-50 dark:border-stone-800 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Trophy className="w-4 h-4 text-amber-500" />
-          <h2 className="text-sm font-bold text-orange-900">Leaderboard</h2>
+          <h2 className="text-sm font-bold text-orange-900 dark:text-orange-50">Leaderboard</h2>
           {data.kshetra && (
-            <span className="text-xs bg-orange-100 text-orange-600 font-semibold px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-orange-100 dark:bg-stone-700 text-orange-600 dark:text-orange-400 font-semibold px-2 py-0.5 rounded-full">
               {data.kshetra}
             </span>
           )}
@@ -99,7 +99,7 @@ function UserView({ data }: { data: Extract<LeaderboardData, { isAdmin: false }>
         )}
       </div>
 
-      <div className="divide-y divide-orange-50">
+      <div className="divide-y divide-orange-50 dark:divide-stone-800">
         {data.entries.length === 0 ? (
           <p className="text-center text-sm text-orange-300 py-6">No members yet</p>
         ) : (
@@ -110,9 +110,9 @@ function UserView({ data }: { data: Extract<LeaderboardData, { isAdmin: false }>
         {data.userEntry && (
           <>
             <div className="flex items-center gap-2 px-4 py-1.5">
-              <div className="flex-1 border-t border-dashed border-orange-200" />
+              <div className="flex-1 border-t border-dashed border-orange-200 dark:border-stone-600" />
               <span className="text-xs text-orange-300">your position</span>
-              <div className="flex-1 border-t border-dashed border-orange-200" />
+              <div className="flex-1 border-t border-dashed border-orange-200 dark:border-stone-600" />
             </div>
             <EntryRow entry={data.userEntry} />
           </>
@@ -128,14 +128,14 @@ function AdminView({ data }: { data: Extract<LeaderboardData, { isAdmin: true }>
   const entries = data.groups[active] ?? []
 
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-orange-100 overflow-hidden">
-      <div className="px-4 py-3.5 border-b border-orange-50 flex items-center gap-2">
+    <div className="bg-white dark:bg-stone-900 rounded-3xl shadow-sm border border-orange-100 dark:border-stone-700 overflow-hidden">
+      <div className="px-4 py-3.5 border-b border-orange-50 dark:border-stone-800 flex items-center gap-2">
         <Trophy className="w-4 h-4 text-amber-500" />
-        <h2 className="text-sm font-bold text-orange-900">Leaderboard — All Kshetras</h2>
+        <h2 className="text-sm font-bold text-orange-900 dark:text-orange-50">Leaderboard — All Kshetras</h2>
       </div>
 
       {/* Kshetra tabs */}
-      <div className="flex gap-1.5 px-4 py-2.5 overflow-x-auto border-b border-orange-50 scrollbar-hide">
+      <div className="flex gap-1.5 px-4 py-2.5 overflow-x-auto border-b border-orange-50 dark:border-stone-800 scrollbar-hide">
         {KSHETRA_OPTIONS.map((k) => {
           const count = data.groups[k]?.length ?? 0
           return (
@@ -147,8 +147,8 @@ function AdminView({ data }: { data: Extract<LeaderboardData, { isAdmin: true }>
                 active === k
                   ? 'bg-orange-600 text-white'
                   : count > 0
-                    ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                    : 'bg-orange-50 text-orange-300 cursor-default'
+                    ? 'bg-orange-100 dark:bg-stone-700 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-stone-600'
+                    : 'bg-orange-50 dark:bg-stone-800 text-orange-300 cursor-default'
               )}
             >
               {k}
@@ -163,13 +163,13 @@ function AdminView({ data }: { data: Extract<LeaderboardData, { isAdmin: true }>
       </div>
 
       {/* Header row */}
-      <div className="flex items-center gap-3 px-4 py-2 bg-orange-50/50">
+      <div className="flex items-center gap-3 px-4 py-2 bg-orange-50/50 dark:bg-stone-800/50">
         <Star className="w-3 h-3 text-orange-300 flex-shrink-0" />
         <span className="flex-1 text-xs text-orange-400 font-medium uppercase tracking-wide">Member</span>
         <span className="text-xs text-orange-400 font-medium uppercase tracking-wide">Rajipo</span>
       </div>
 
-      <div className="divide-y divide-orange-50 max-h-80 overflow-y-auto">
+      <div className="divide-y divide-orange-50 dark:divide-stone-800 max-h-80 overflow-y-auto">
         {entries.length === 0 ? (
           <p className="text-center text-sm text-orange-300 py-6">No members in this kshetra</p>
         ) : (
