@@ -73,8 +73,8 @@ function checkAndFire(
     markFiredToday(pref.activityId)
     const name = activityNames[pref.activityId] ?? 'your daily practice'
     fireNotification(
-      'Aahanik — Time for Seva',
-      `${name} 🙏`,
+      `Aahanik — Time for ${name}`,
+      '🙏',
       pref.activityId
     )
   })

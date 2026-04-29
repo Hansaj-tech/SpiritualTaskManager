@@ -147,7 +147,7 @@ export default function DashboardPage() {
         {/* Activity list */}
         <div className="bg-white rounded-3xl shadow-sm border border-orange-100 overflow-hidden">
           <div className="px-4 py-3.5 border-b border-orange-50 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-orange-900">Today&apos;s Seva</h2>
+            <h2 className="text-sm font-bold text-orange-900">Today&apos;s Aahanik</h2>
             <span className="text-xs text-orange-400 font-medium">
               {completedCount}/{activityDefs.length} done
             </span>
