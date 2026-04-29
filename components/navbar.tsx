@@ -2,12 +2,14 @@
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { useRouter } from 'next/navigation'
-import { LogOut, User, ChevronDown } from 'lucide-react'
+import { LogOut, User, ChevronDown, Moon, Sun } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
+import { useTheme } from '@/contexts/theme-context'
 import { BapsLogo } from '@/components/baps-logo'
 
 export function Navbar() {
   const { userProfile, logout } = useAuth()
+  const { isDark, toggleTheme } = useTheme()
   const router = useRouter()
 
   const initials = (userProfile?.displayName ?? 'U')
@@ -85,6 +87,22 @@ export function Navbar() {
               >
                 <User className="w-4 h-4 text-orange-500" />
                 Edit Profile
+              </DropdownMenu.Item>
+
+              {/* Dark mode toggle */}
+              <DropdownMenu.Item
+                className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-orange-800 dark:text-orange-200 rounded-xl hover:bg-orange-50 dark:hover:bg-stone-800 cursor-pointer outline-none transition-colors"
+                onSelect={(e) => { e.preventDefault(); toggleTheme() }}
+              >
+                <div className="flex items-center gap-2.5 flex-1">
+                  {isDark
+                    ? <Sun className="w-4 h-4 text-orange-500" />
+                    : <Moon className="w-4 h-4 text-orange-500" />}
+                  <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+                </div>
+                <div className={`relative w-9 h-5 rounded-full transition-colors duration-200 flex-shrink-0 ${isDark ? 'bg-orange-600' : 'bg-orange-200'}`}>
+                  <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${isDark ? 'translate-x-4' : ''}`} />
+                </div>
               </DropdownMenu.Item>
 
               <DropdownMenu.Separator className="h-px bg-orange-100 dark:bg-stone-700 my-1" />

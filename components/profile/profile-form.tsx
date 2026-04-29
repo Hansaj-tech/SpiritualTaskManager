@@ -2,15 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Check, Moon, Sun } from 'lucide-react'
+import { Loader2, Check } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
-import { useTheme } from '@/contexts/theme-context'
 import { KSHETRA_OPTIONS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 export function ProfileForm() {
   const { userProfile, updateProfile, updateKshetra } = useAuth()
-  const { isDark, toggleTheme } = useTheme()
   const router = useRouter()
   const [displayName, setDisplayName] = useState(userProfile?.displayName ?? '')
   const [photoURL, setPhotoURL] = useState(userProfile?.photoURL ?? '')
@@ -108,36 +106,6 @@ export function ProfileForm() {
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Dark mode toggle */}
-      <div className="flex items-center justify-between py-1">
-        <div className="flex items-center gap-2.5">
-          {isDark
-            ? <Moon className="w-4 h-4 text-orange-400" />
-            : <Sun className="w-4 h-4 text-orange-400" />}
-          <div>
-            <p className="text-sm font-medium text-orange-900 dark:text-orange-100">Dark Mode</p>
-            <p className="text-xs text-orange-400">{isDark ? 'On' : 'Off'}</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={isDark}
-          onClick={toggleTheme}
-          className={cn(
-            'relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none',
-            isDark ? 'bg-orange-600' : 'bg-orange-200'
-          )}
-        >
-          <span
-            className={cn(
-              'absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200',
-              isDark && 'translate-x-5'
-            )}
-          />
-        </button>
       </div>
 
       <button
