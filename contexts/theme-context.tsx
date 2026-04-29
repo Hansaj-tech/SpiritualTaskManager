@@ -17,8 +17,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem('aahanik-theme')
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    const dark = stored !== null ? stored === 'dark' : prefersDark
+    const dark = stored === 'dark'
     setIsDark(dark)
     document.documentElement.classList.toggle('dark', dark)
   }, [])

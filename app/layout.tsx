@@ -37,7 +37,7 @@ export default function RootLayout({
     <html lang="en" className="h-full">
       <head>
         {/* Prevent flash of wrong theme before React hydrates */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var s=localStorage.getItem('aahanik-theme');var d=s!==null?s==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;if(d)document.documentElement.classList.add('dark');}catch(e){}})();` }} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(localStorage.getItem('aahanik-theme')==='dark')document.documentElement.classList.add('dark');}catch(e){}})();` }} />
       </head>
       <body className="h-full">
         <ThemeProvider>

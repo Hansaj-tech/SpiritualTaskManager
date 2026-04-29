@@ -2,15 +2,30 @@
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { useRouter } from 'next/navigation'
-import { LogOut, User, ChevronDown, Moon, Sun } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { LogOut, User, ChevronDown, Moon, Sun, X } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { useTheme } from '@/contexts/theme-context'
 import { BapsLogo } from '@/components/baps-logo'
+
+const DARK_TIP_KEY = 'aahanik-dark-tip-shown'
 
 export function Navbar() {
   const { userProfile, logout } = useAuth()
   const { isDark, toggleTheme } = useTheme()
   const router = useRouter()
+  const [showDarkTip, setShowDarkTip] = useState(false)
+
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem(DARK_TIP_KEY)) setShowDarkTip(true)
+    } catch { /* ignore */ }
+  }, [])
+
+  function dismissDarkTip() {
+    setShowDarkTip(false)
+    try { localStorage.setItem(DARK_TIP_KEY, '1') } catch { /* ignore */ }
+  }
 
   const initials = (userProfile?.displayName ?? 'U')
     .split(' ')
@@ -36,6 +51,18 @@ export function Navbar() {
         </div>
 
         {/* Avatar menu */}
+        <div className="relative">
+        {showDarkTip && (
+          <div className="absolute right-0 top-12 z-50 w-48 bg-stone-900 text-white text-xs rounded-2xl px-3 py-2.5 shadow-xl flex items-start gap-2">
+            {/* Arrow pointing up at the avatar */}
+            <span className="absolute -top-1.5 right-4 w-3 h-3 bg-stone-900 rotate-45 rounded-sm" />
+            <Moon className="w-3.5 h-3.5 text-orange-400 flex-shrink-0 mt-0.5" />
+            <span className="flex-1 leading-snug">Try <strong>Dark Mode</strong> from here!</span>
+            <button onClick={dismissDarkTip} className="flex-shrink-0 text-stone-400 hover:text-white transition-colors">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <button className="flex items-center gap-1.5 rounded-xl px-1 py-1 hover:bg-orange-50 dark:hover:bg-stone-800 transition-colors outline-none group">
@@ -117,6 +144,7 @@ export function Navbar() {
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
+        </div>
       </div>
     </header>
   )
