@@ -7,6 +7,7 @@ import {
   query,
   orderBy,
   limit,
+  where,
   onSnapshot,
   getDocs,
 } from 'firebase/firestore'
@@ -17,7 +18,7 @@ import {
   saveActivityToggle,
   docToDayLog,
 } from '@/lib/firestore-helpers'
-import { todayKey, computeActivityStreak } from '@/lib/date-utils'
+import { todayKey, computeActivityStreak, getWeekDates } from '@/lib/date-utils'
 import { ACTIVITY_IDS } from '@/lib/constants'
 import type { ActivityDefinition, DayLog, AppConfig } from '@/types'
 
@@ -26,6 +27,7 @@ export interface ActivityState {
   todayLog: DayLog
   activityStreaks: Record<string, number>
   appConfig: AppConfig
+  weeklyTaskCount: number | null
   loading: boolean
   toggleActivity: (activityId: string, done: boolean) => Promise<void>
 }
@@ -40,6 +42,7 @@ export function useActivities(): ActivityState {
   const [todayLog, setTodayLog] = useState<DayLog>(emptyLog)
   const [activityStreaks, setActivityStreaks] = useState<Record<string, number>>({})
   const [appConfig, setAppConfig] = useState<AppConfig>({ dailyQuote: '', guruImages: [] })
+  const [weeklyTaskCount, setWeeklyTaskCount] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
 
   // Load activity defs once on mount
@@ -100,6 +103,23 @@ export function useActivities(): ActivityState {
     })
   }, [user, todayLog.totalPoints])
 
+  // On Sundays: compute total tasks done for the week (Mon–Sun = max 70)
+  useEffect(() => {
+    if (!user) return
+    if (new Date().getDay() !== 0) return
+    const weekDates = getWeekDates(todayKey())
+    const monToSat = weekDates.slice(0, 6)
+    const logsRef = collection(db, 'users', user.uid, 'activityLogs')
+    getDocs(query(logsRef, where('date', 'in', monToSat))).then((snap) => {
+      let count = snap.docs.reduce((sum, d) => {
+        const acts = d.data().activities as Record<string, { done: boolean }> | undefined
+        return sum + Object.values(acts ?? {}).filter((e) => e.done).length
+      }, 0)
+      count += Object.values(todayLog.activities).filter((e) => e.done).length
+      setWeeklyTaskCount(count)
+    })
+  }, [user, todayLog])
+
   const toggleActivity = useCallback(
     async (activityId: string, done: boolean) => {
       if (!user || !userProfile) return
@@ -137,5 +157,5 @@ export function useActivities(): ActivityState {
     [user, userProfile, activityDefs, todayLog]
   )
 
-  return { activityDefs, todayLog, activityStreaks, appConfig, loading, toggleActivity }
+  return { activityDefs, todayLog, activityStreaks, appConfig, weeklyTaskCount, loading, toggleActivity }
 }

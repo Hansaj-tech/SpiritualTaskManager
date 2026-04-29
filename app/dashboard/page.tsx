@@ -13,7 +13,7 @@ import { ActivityRow } from '@/components/dashboard/activity-row'
 import { ReminderModal } from '@/components/reminders/reminder-modal'
 import { LeaderboardCard } from '@/components/leaderboard/leaderboard-card'
 import { useLeaderboard } from '@/hooks/use-leaderboard'
-import { Loader2, Bell, X } from 'lucide-react'
+import { Loader2, Bell, X, CalendarDays } from 'lucide-react'
 
 export default function DashboardPage() {
   const { userProfile } = useAuth()
@@ -23,6 +23,7 @@ export default function DashboardPage() {
     todayLog,
     activityStreaks,
     appConfig,
+    weeklyTaskCount,
     loading,
     toggleActivity,
   } = useActivities()
@@ -37,6 +38,7 @@ export default function DashboardPage() {
   const [openReminderId, setOpenReminderId] = useState<string | null>(null)
   const [notifDismissed, setNotifDismissed] = useState(false)
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>('default')
+  const [weeklyBannerDismissed, setWeeklyBannerDismissed] = useState(false)
 
   useEffect(() => {
     if (typeof Notification !== 'undefined') {
@@ -98,6 +100,27 @@ export default function DashboardPage() {
             </button>
             <button
               onClick={() => setNotifDismissed(true)}
+              className="w-6 h-6 rounded-full hover:bg-orange-50 flex items-center justify-center text-orange-300 flex-shrink-0"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* Sunday weekly progress banner */}
+        {weeklyTaskCount !== null && !weeklyBannerDismissed && (
+          <div className="bg-white rounded-2xl border border-orange-100 px-4 py-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+              <CalendarDays className="w-4 h-4 text-orange-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-orange-900">Weekly Summary</p>
+              <p className="text-xs text-orange-600">
+                You have completed {weeklyTaskCount} / 70 tasks this week 🙏
+              </p>
+            </div>
+            <button
+              onClick={() => setWeeklyBannerDismissed(true)}
               className="w-6 h-6 rounded-full hover:bg-orange-50 flex items-center justify-center text-orange-300 flex-shrink-0"
             >
               <X className="w-3.5 h-3.5" />

@@ -39,6 +39,7 @@ export function FcmProvider({ children }: { children: ReactNode }) {
           new Notification(payload.notification.title ?? 'Aahanik', {
             body: payload.notification.body,
             icon: '/icon-192x192.png',
+            requireInteraction: true,
           })
         }
       })

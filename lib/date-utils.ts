@@ -1,4 +1,4 @@
-import { format, differenceInCalendarDays, parseISO } from 'date-fns'
+import { format, differenceInCalendarDays, parseISO, subDays } from 'date-fns'
 
 export function todayKey(): string {
   return format(new Date(), 'yyyy-MM-dd')
@@ -16,6 +16,11 @@ export function computeStreak(
   const diff = differenceInCalendarDays(parseISO(today), parseISO(lastCompletedDate))
   if (diff === 1) return { streak: currentStreak + 1, lastCompletedDate: today }
   return { streak: 1, lastCompletedDate: today }
+}
+
+export function getWeekDates(sunday: string): string[] {
+  const sun = parseISO(sunday)
+  return Array.from({ length: 7 }, (_, i) => format(subDays(sun, 6 - i), 'yyyy-MM-dd'))
 }
 
 export function computeActivityStreak(doneDates: string[], today: string): number {

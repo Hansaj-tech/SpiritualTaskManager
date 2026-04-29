@@ -24,6 +24,7 @@ messaging.onBackgroundMessage((payload) => {
     icon: '/icon-192x192.png',
     badge: '/icon-192x192.png',
     tag: payload.data?.activityId || 'aahanik',
+    requireInteraction: true,
   });
 });
 
@@ -39,6 +40,7 @@ self.addEventListener('message', (event) => {
       icon: '/icon-192x192.png',
       badge: '/icon-192x192.png',
       tag: tag || 'aahanik-reminder',
+      requireInteraction: true,
     })
   );
 });

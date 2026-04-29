@@ -48,7 +48,7 @@ async function fireNotification(title: string, body: string, tag: string) {
   }
   // Fallback: direct Notification API
   if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-    new Notification(title, { body, icon: '/icon-192x192.png', tag })
+    new Notification(title, { body, icon: '/icon-192x192.png', tag, requireInteraction: true })
   }
 }
 
