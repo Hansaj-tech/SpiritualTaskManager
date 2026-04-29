@@ -11,6 +11,8 @@ import { ProgressBar } from '@/components/dashboard/progress-bar'
 import { DailyQuote } from '@/components/dashboard/daily-quote'
 import { ActivityRow } from '@/components/dashboard/activity-row'
 import { ReminderModal } from '@/components/reminders/reminder-modal'
+import { LeaderboardCard } from '@/components/leaderboard/leaderboard-card'
+import { useLeaderboard } from '@/hooks/use-leaderboard'
 import { Loader2, Bell, X } from 'lucide-react'
 
 export default function DashboardPage() {
@@ -31,6 +33,7 @@ export default function DashboardPage() {
 
   const activityNames = Object.fromEntries(activityDefs.map((a) => [a.id, a.name]))
   const { reminders, setReminder } = useReminders(doneIds, activityNames)
+  const { data: leaderboardData } = useLeaderboard()
   const [openReminderId, setOpenReminderId] = useState<string | null>(null)
   const [notifDismissed, setNotifDismissed] = useState(false)
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>('default')
@@ -140,6 +143,9 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
+
+        {/* Leaderboard */}
+        {leaderboardData && <LeaderboardCard data={leaderboardData} />}
       </main>
 
       {openActivity && (
