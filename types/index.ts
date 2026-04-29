@@ -63,3 +63,14 @@ export interface AppConfig {
 export type Kshetra =
   | 'K1' | 'K2' | 'K3' | 'K4' | 'K5' | 'K6'
   | 'K7' | 'K8' | 'K9' | 'K10' | 'K11' | 'K12'
+
+export interface LeaderboardEntry {
+  uid: string
+  displayName: string
+  photoURL: string | null
+  rajipo: number
+  tasksCompleted: number
+  streak: number
+  rank: number
+  isCurrentUser: boolean
+}

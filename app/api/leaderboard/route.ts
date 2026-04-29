@@ -1,16 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
-
-export interface LeaderboardEntry {
-  uid: string
-  displayName: string
-  photoURL: string | null
-  rajipo: number
-  tasksCompleted: number
-  streak: number
-  rank: number
-  isCurrentUser: boolean
-}
+import type { LeaderboardEntry } from '@/types'
 
 export async function GET(request: NextRequest) {
   if (

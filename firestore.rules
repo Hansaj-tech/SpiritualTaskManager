@@ -16,9 +16,9 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read, create: if isOwner(uid);
+      allow read: if isSignedIn();
+      allow create: if isOwner(uid);
       allow update: if isOwner(uid);
-      allow read: if isAdmin();
 
       match /activityLogs/{dateKey} {
         allow read, write: if isOwner(uid);

@@ -5,7 +5,7 @@ import { Trophy, Flame, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { KSHETRA_OPTIONS } from '@/lib/constants'
 import type { LeaderboardData } from '@/hooks/use-leaderboard'
-import type { LeaderboardEntry } from '@/app/api/leaderboard/route'
+import type { LeaderboardEntry } from '@/types'
 
 const RANK_STYLES: Record<number, { badge: string; text: string }> = {
   1: { badge: 'bg-amber-400 text-white', text: 'text-amber-600' },
