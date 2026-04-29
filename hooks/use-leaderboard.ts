@@ -34,7 +34,10 @@ export function useLeaderboard() {
       .then((token) =>
         fetch('/api/leaderboard', { headers: { Authorization: `Bearer ${token}` } })
       )
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`Leaderboard API error ${r.status}`)
+        return r.json()
+      })
       .then((json) => {
         if (!cancelled) setData(json as LeaderboardData)
       })

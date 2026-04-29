@@ -13,6 +13,15 @@ export interface LeaderboardEntry {
 }
 
 export async function GET(request: NextRequest) {
+  if (
+    !process.env.FIREBASE_ADMIN_PROJECT_ID ||
+    !process.env.FIREBASE_ADMIN_CLIENT_EMAIL ||
+    !process.env.FIREBASE_ADMIN_PRIVATE_KEY
+  ) {
+    console.error('Missing Firebase Admin env vars')
+    return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
+  }
+
   try {
     const idToken = (request.headers.get('authorization') ?? '').replace('Bearer ', '')
     if (!idToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -87,7 +96,8 @@ export async function GET(request: NextRequest) {
       })
     }
   } catch (err) {
-    console.error('leaderboard error:', err)
-    return NextResponse.json({ error: String(err) }, { status: 500 })
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('leaderboard error:', msg)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
