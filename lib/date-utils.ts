@@ -25,7 +25,10 @@ export function getWeekDates(sunday: string): string[] {
 
 export function computeActivityStreak(doneDates: string[], today: string): number {
   const sorted = [...doneDates].sort((a, b) => b.localeCompare(a))
-  if (!sorted.includes(today)) return 0
+  if (sorted.length === 0) return 0
+  // Show streak if most recent is today or yesterday (streak alive going into today)
+  const diffFromToday = differenceInCalendarDays(parseISO(today), parseISO(sorted[0]))
+  if (diffFromToday > 1) return 0
   let streak = 1
   for (let i = 1; i < sorted.length; i++) {
     const diff = differenceInCalendarDays(parseISO(sorted[i - 1]), parseISO(sorted[i]))
