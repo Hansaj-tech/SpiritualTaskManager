@@ -101,7 +101,10 @@ export function useActivities(): ActivityState {
       }
       setActivityStreaks(streaks)
     })
-  }, [user, todayLog.totalPoints])
+  // completedAt is set by serverTimestamp() on each Firestore write, so it
+  // only changes when onSnapshot fires AFTER the write — not on optimistic updates.
+  // This avoids reading stale data before the batch commit is visible.
+  }, [user, todayLog.completedAt])
 
   // On Sundays: compute total tasks done for the week (Mon–Sun = max 70)
   useEffect(() => {
