@@ -180,7 +180,10 @@ export async function getActivityDefs(): Promise<ActivityDefinition[]> {
 
   const allIds = [...ACTIVITY_IDS, ...BONUS_ACTIVITY_IDS]
   return allIds
-    .map((id) => stored?.[id] ?? { id: id as ActivityId, ...DEFAULT_ACTIVITIES[id] })
+    .map((id) => ({
+      ...(stored?.[id] ?? DEFAULT_ACTIVITIES[id]),
+      id: id as ActivityId,
+    }))
     .sort((a, b) => a.order - b.order)
 }
 
