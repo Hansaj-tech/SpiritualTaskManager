@@ -84,27 +84,33 @@ export function useActivities(): ActivityState {
   // Compute per-activity streaks from last 30 logs
   useEffect(() => {
     if (!user) return
+    const today = todayKey()
+    const currentActivities = todayLog.activities
     const logsRef = collection(db, 'users', user.uid, 'activityLogs')
-    const q = query(logsRef, orderBy('date', 'desc'), limit(30))
+    const q = query(logsRef, orderBy('date', 'desc'), limit(31))
     getDocs(q).then((snap) => {
-      const allLogs = snap.docs.map((d) => ({
-        date: d.data().date as string,
-        activities: d.data().activities as Record<string, { done: boolean }>,
-      }))
-      const today = todayKey()
+      // Exclude today from Firestore data — use real-time todayLog.activities
+      // instead to avoid the race between the optimistic update and the write.
+      const historicalLogs = snap.docs
+        .map((d) => ({
+          date: d.data().date as string,
+          activities: d.data().activities as Record<string, { done: boolean }>,
+        }))
+        .filter((log) => log.date !== today)
+
       const streaks: Record<string, number> = {}
       for (const id of [...ACTIVITY_IDS, ...BONUS_ACTIVITY_IDS]) {
-        const doneDates = allLogs
+        const historicalDone = historicalLogs
           .filter((log) => log.activities?.[id]?.done)
           .map((log) => log.date)
+        const doneDates = currentActivities[id]?.done
+          ? [today, ...historicalDone]
+          : historicalDone
         streaks[id] = computeActivityStreak(doneDates, today)
       }
       setActivityStreaks(streaks)
     })
-  // completedAt is set by serverTimestamp() on each Firestore write, so it
-  // only changes when onSnapshot fires AFTER the write — not on optimistic updates.
-  // This avoids reading stale data before the batch commit is visible.
-  }, [user, todayLog.completedAt])
+  }, [user, todayLog.totalPoints])
 
   // On Sundays: compute total tasks done for the week (Mon–Sun = max 70)
   useEffect(() => {

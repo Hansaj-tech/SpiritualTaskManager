@@ -10,7 +10,7 @@ export function computeStreak(
   lastCompletedDate: string | null,
   today: string
 ): { streak: number; lastCompletedDate: string | null } {
-  if (!allCompleted) return { streak: 0, lastCompletedDate }
+  if (!allCompleted) return { streak: currentStreak, lastCompletedDate }
   if (lastCompletedDate === today) return { streak: currentStreak, lastCompletedDate }
   if (!lastCompletedDate) return { streak: 1, lastCompletedDate: today }
   const diff = differenceInCalendarDays(parseISO(today), parseISO(lastCompletedDate))
