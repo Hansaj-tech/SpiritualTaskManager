@@ -13,6 +13,13 @@ export const ACTIVITY_IDS: ActivityId[] = [
   'pooja',
 ]
 
+export const BONUS_ACTIVITY_IDS: ActivityId[] = [
+  'bhajan',
+  'dhyan',
+  'seva',
+  'satsang-sabha',
+]
+
 export const DEFAULT_ACTIVITIES: Record<ActivityId, { name: string; order: number; points: number }> = {
   'morning-aarti':         { name: 'Morning Aarti',           order: 1,  points: 10 },
   'evening-aarti':         { name: 'Evening Aarti',           order: 2,  points: 10 },
@@ -24,6 +31,10 @@ export const DEFAULT_ACTIVITIES: Record<ActivityId, { name: string; order: numbe
   'nitya-prerna-shravan':  { name: 'Nitya Prerna Shravan',    order: 8,  points: 10 },
   'chesta':                { name: 'Chesta',                  order: 9,  points: 10 },
   'pooja':                 { name: 'Pooja',                   order: 10, points: 10 },
+  'bhajan':                { name: 'Bhajan',                  order: 11, points: 10 },
+  'dhyan':                 { name: 'Dhyan',                   order: 12, points: 10 },
+  'seva':                  { name: 'Seva',                    order: 13, points: 10 },
+  'satsang-sabha':         { name: 'Satsang Sabha',           order: 14, points: 10 },
 }
 
 export const KSHETRA_OPTIONS = [

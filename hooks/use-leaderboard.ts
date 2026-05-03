@@ -6,31 +6,63 @@ import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/auth-context'
 import type { LeaderboardEntry } from '@/types'
 
-interface UserLeaderboardData {
-  isAdmin: false
+export interface RankedView {
   entries: LeaderboardEntry[]
   userRank: number | null
   userEntry: LeaderboardEntry | null
+}
+
+interface UserLeaderboardData {
+  isAdmin: false
+  monthly: RankedView
+  lifetime: RankedView
   kshetra: string | null
 }
 
 interface AdminLeaderboardData {
   isAdmin: true
-  groups: Record<string, LeaderboardEntry[]>
+  monthly: Record<string, LeaderboardEntry[]>
+  lifetime: Record<string, LeaderboardEntry[]>
 }
 
 export type LeaderboardData = UserLeaderboardData | AdminLeaderboardData
 
-function toEntry(uid: string, data: Record<string, unknown>, currentUid: string, rank: number): LeaderboardEntry {
+function currentMonthKey(): string {
+  return new Date().toISOString().slice(0, 7) // YYYY-MM
+}
+
+function toEntry(uid: string, data: Record<string, unknown>, currentUid: string): Omit<LeaderboardEntry, 'rank'> {
+  const month = currentMonthKey()
+  const storedMonth = (data.monthlyRajipoMonth as string) ?? ''
+  const monthlyRajipo = storedMonth === month ? ((data.monthlyRajipo as number) ?? 0) : 0
   return {
     uid,
     displayName: (data.displayName as string) ?? 'Unknown',
     photoURL: (data.photoURL as string | null) ?? null,
     rajipo: (data.rajipo as number) ?? 0,
+    monthlyRajipo,
     tasksCompleted: Math.round(((data.rajipo as number) ?? 0) / 10),
     streak: (data.streak as number) ?? 0,
-    rank,
     isCurrentUser: uid === currentUid,
+  }
+}
+
+function buildRankedView(
+  entries: (Omit<LeaderboardEntry, 'rank'>)[],
+  sortKey: 'rajipo' | 'monthlyRajipo',
+  currentUid: string
+): RankedView {
+  const sorted = [...entries]
+    .sort((a, b) => b[sortKey] - a[sortKey])
+    .map((e, i) => ({ ...e, rank: i + 1 }))
+
+  const top5 = sorted.slice(0, 5)
+  const userEntry = sorted.find((e) => e.uid === currentUid)
+
+  return {
+    entries: top5,
+    userRank: userEntry?.rank ?? null,
+    userEntry: userEntry && userEntry.rank > 5 ? userEntry : null,
   }
 }
 
@@ -48,46 +80,43 @@ export function useLeaderboard() {
       try {
         if (userProfile!.isAdmin) {
           const snap = await getDocs(collection(db, 'users'))
-          const groups: Record<string, LeaderboardEntry[]> = {}
+          const monthly: Record<string, LeaderboardEntry[]> = {}
+          const lifetime: Record<string, LeaderboardEntry[]> = {}
 
+          const byKshetra: Record<string, Omit<LeaderboardEntry, 'rank'>[]> = {}
           snap.docs.forEach((doc) => {
             const d = doc.data()
             const kshetra = (d.kshetra as string) ?? 'Other'
-            if (!groups[kshetra]) groups[kshetra] = []
-            groups[kshetra].push(toEntry(doc.id, d, user!.uid, 0))
+            if (!byKshetra[kshetra]) byKshetra[kshetra] = []
+            byKshetra[kshetra].push(toEntry(doc.id, d, user!.uid))
           })
 
-          for (const k of Object.keys(groups)) {
-            groups[k]
+          for (const k of Object.keys(byKshetra)) {
+            monthly[k] = [...byKshetra[k]]
+              .sort((a, b) => b.monthlyRajipo - a.monthlyRajipo)
+              .map((e, i) => ({ ...e, rank: i + 1 }))
+            lifetime[k] = [...byKshetra[k]]
               .sort((a, b) => b.rajipo - a.rajipo)
-              .forEach((e, i) => { e.rank = i + 1 })
+              .map((e, i) => ({ ...e, rank: i + 1 }))
           }
 
-          if (!cancelled) setData({ isAdmin: true, groups })
+          if (!cancelled) setData({ isAdmin: true, monthly, lifetime })
         } else {
           const kshetra = userProfile!.kshetra
           if (!kshetra) {
-            if (!cancelled) setData({ isAdmin: false, entries: [], userRank: null, userEntry: null, kshetra: null })
+            const empty: RankedView = { entries: [], userRank: null, userEntry: null }
+            if (!cancelled) setData({ isAdmin: false, monthly: empty, lifetime: empty, kshetra: null })
             return
           }
 
           const snap = await getDocs(query(collection(db, 'users'), where('kshetra', '==', kshetra)))
-
-          const all = snap.docs
-            .map((doc) => toEntry(doc.id, doc.data(), user!.uid, 0))
-            .sort((a, b) => b.rajipo - a.rajipo)
-
-          all.forEach((e, i) => { e.rank = i + 1 })
-
-          const top5 = all.slice(0, 5)
-          const userEntry = all.find((e) => e.uid === user!.uid)
+          const entries = snap.docs.map((doc) => toEntry(doc.id, doc.data(), user!.uid))
 
           if (!cancelled) {
             setData({
               isAdmin: false,
-              entries: top5,
-              userRank: userEntry?.rank ?? null,
-              userEntry: userEntry && userEntry.rank > 5 ? userEntry : null,
+              monthly: buildRankedView(entries, 'monthlyRajipo', user!.uid),
+              lifetime: buildRankedView(entries, 'rajipo', user!.uid),
               kshetra,
             })
           }

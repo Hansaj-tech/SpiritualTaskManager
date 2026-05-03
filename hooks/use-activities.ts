@@ -19,7 +19,7 @@ import {
   docToDayLog,
 } from '@/lib/firestore-helpers'
 import { todayKey, computeActivityStreak, getWeekDates } from '@/lib/date-utils'
-import { ACTIVITY_IDS } from '@/lib/constants'
+import { ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
 import type { ActivityDefinition, DayLog, AppConfig } from '@/types'
 
 export interface ActivityState {
@@ -93,7 +93,7 @@ export function useActivities(): ActivityState {
       }))
       const today = todayKey()
       const streaks: Record<string, number> = {}
-      for (const id of ACTIVITY_IDS) {
+      for (const id of [...ACTIVITY_IDS, ...BONUS_ACTIVITY_IDS]) {
         const doneDates = allLogs
           .filter((log) => log.activities?.[id]?.done)
           .map((log) => log.date)
@@ -113,9 +113,9 @@ export function useActivities(): ActivityState {
     getDocs(query(logsRef, where('date', 'in', monToSat))).then((snap) => {
       let count = snap.docs.reduce((sum, d) => {
         const acts = d.data().activities as Record<string, { done: boolean }> | undefined
-        return sum + Object.values(acts ?? {}).filter((e) => e.done).length
+        return sum + ACTIVITY_IDS.filter((id) => acts?.[id]?.done).length
       }, 0)
-      count += Object.values(todayLog.activities).filter((e) => e.done).length
+      count += ACTIVITY_IDS.filter((id) => todayLog.activities[id]?.done).length
       setWeeklyTaskCount(count)
     })
   }, [user, todayLog])

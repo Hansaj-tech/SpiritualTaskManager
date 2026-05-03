@@ -12,6 +12,7 @@ interface ActivityRowProps {
   reminder?: ReminderPref
   onToggle: (done: boolean) => void
   onReminderOpen: () => void
+  disabled?: boolean
 }
 
 export function ActivityRow({
@@ -21,6 +22,7 @@ export function ActivityRow({
   reminder,
   onToggle,
   onReminderOpen,
+  disabled = false,
 }: ActivityRowProps) {
   const done = logEntry?.done ?? false
 
@@ -28,18 +30,21 @@ export function ActivityRow({
     <div
       className={cn(
         'flex items-center gap-3 px-4 py-3.5 transition-all duration-200',
-        done && 'bg-orange-50/60 dark:bg-stone-800/60'
+        done && 'bg-orange-50/60 dark:bg-stone-800/60',
+        disabled && 'opacity-50 cursor-not-allowed'
       )}
     >
       {/* Checkbox */}
       <Checkbox.Root
         checked={done}
-        onCheckedChange={(val) => onToggle(val === true)}
+        disabled={disabled}
+        onCheckedChange={(val) => { if (!disabled) onToggle(val === true) }}
         className={cn(
           'w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 outline-none',
           done
             ? 'border-orange-500 bg-orange-500 shadow-sm'
-            : 'border-orange-200 dark:border-stone-600 bg-white dark:bg-stone-800 hover:border-orange-400 active:scale-95'
+            : 'border-orange-200 dark:border-stone-600 bg-white dark:bg-stone-800 hover:border-orange-400 active:scale-95',
+          disabled && 'pointer-events-none'
         )}
       >
         <Checkbox.Indicator>

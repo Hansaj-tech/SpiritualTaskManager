@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useAdminUserDetail } from '@/hooks/use-admin'
-import { DEFAULT_ACTIVITIES, ACTIVITY_IDS } from '@/lib/constants'
+import { DEFAULT_ACTIVITIES, ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
 import type { AdminUser, ActivityStats } from '@/hooks/use-admin'
 
 interface UserDetailPanelProps {
@@ -123,30 +123,62 @@ export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
             No activity data for {periodLabel.toLowerCase()}.
           </p>
         ) : (
-          ACTIVITY_IDS.map((id) => {
-            const def = DEFAULT_ACTIVITIES[id]
-            const stats = log[id] ?? { done: 0, total: totalDays }
-            const pct = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0
-            return (
-              <div key={id} className="px-4 py-3 border-b border-orange-50 last:border-0">
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-sm text-orange-900 font-medium">{def.name}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-orange-600">{pct}%</span>
-                    <span className="text-xs text-orange-400">{stats.done}/{stats.total}</span>
+          <>
+            {ACTIVITY_IDS.map((id) => {
+              const def = DEFAULT_ACTIVITIES[id]
+              const stats = log[id] ?? { done: 0, total: totalDays }
+              const pct = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0
+              return (
+                <div key={id} className="px-4 py-3 border-b border-orange-50">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-sm text-orange-900 font-medium">{def.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-orange-600">{pct}%</span>
+                      <span className="text-xs text-orange-400">{stats.done}/{stats.total}</span>
+                    </div>
+                  </div>
+                  <div className="h-1.5 bg-orange-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-orange-500' : 'bg-orange-300'
+                      }`}
+                      style={{ width: `${pct}%` }}
+                    />
                   </div>
                 </div>
-                <div className="h-1.5 bg-orange-100 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-orange-500' : 'bg-orange-300'
-                    }`}
-                    style={{ width: `${pct}%` }}
-                  />
+              )
+            })}
+
+            {/* Bonus section header */}
+            <div className="px-4 py-2 bg-orange-50 border-b border-orange-100 border-t border-t-orange-100">
+              <p className="text-xs font-semibold text-orange-500 uppercase tracking-wide">Bonus Activities</p>
+            </div>
+
+            {BONUS_ACTIVITY_IDS.map((id, i) => {
+              const def = DEFAULT_ACTIVITIES[id]
+              const stats = log[id] ?? { done: 0, total: totalDays }
+              const pct = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0
+              return (
+                <div key={id} className={`px-4 py-3 ${i < BONUS_ACTIVITY_IDS.length - 1 ? 'border-b border-orange-50' : ''}`}>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-sm text-orange-900 font-medium">{def.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-orange-600">{pct}%</span>
+                      <span className="text-xs text-orange-400">{stats.done}/{stats.total}</span>
+                    </div>
+                  </div>
+                  <div className="h-1.5 bg-orange-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-orange-500' : 'bg-orange-300'
+                      }`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
                 </div>
-              </div>
-            )
-          })
+              )
+            })}
+          </>
         )}
       </div>
     </div>

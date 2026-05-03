@@ -6,7 +6,7 @@ import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/auth-context'
 import { docToUserProfile } from '@/lib/firestore-helpers'
-import { ACTIVITY_IDS } from '@/lib/constants'
+import { ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
 import type { UserProfile, ActivityId } from '@/types'
 
 export type AdminUser = Omit<UserProfile, 'fcmTokens'>
@@ -51,16 +51,17 @@ function countStats(
   docs: Array<{ date: string; activities: Record<string, { done: boolean }> | undefined }>,
   total: number
 ): ActivityStats {
+  const allIds = [...ACTIVITY_IDS, ...BONUS_ACTIVITY_IDS]
   const counts: Record<string, number> = {}
-  for (const id of ACTIVITY_IDS) counts[id] = 0
+  for (const id of allIds) counts[id] = 0
   for (const { activities } of docs) {
     if (!activities) continue
-    for (const id of ACTIVITY_IDS) {
+    for (const id of allIds) {
       if (activities[id]?.done) counts[id]++
     }
   }
   const result: Record<string, { done: number; total: number }> = {}
-  for (const id of ACTIVITY_IDS) result[id] = { done: counts[id], total }
+  for (const id of allIds) result[id] = { done: counts[id], total }
   return result as ActivityStats
 }
 

@@ -4,8 +4,10 @@ import { useState } from 'react'
 import { Trophy, Flame, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { KSHETRA_OPTIONS } from '@/lib/constants'
-import type { LeaderboardData } from '@/hooks/use-leaderboard'
+import type { LeaderboardData, RankedView } from '@/hooks/use-leaderboard'
 import type { LeaderboardEntry } from '@/types'
+
+type Mode = 'monthly' | 'lifetime'
 
 const RANK_STYLES: Record<number, { badge: string; text: string }> = {
   1: { badge: 'bg-amber-400 text-white', text: 'text-amber-600' },
@@ -13,7 +15,36 @@ const RANK_STYLES: Record<number, { badge: string; text: string }> = {
   3: { badge: 'bg-orange-300 text-white', text: 'text-orange-500' },
 }
 
-function EntryRow({ entry, compact = false }: { entry: LeaderboardEntry; compact?: boolean }) {
+function ModeToggle({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => void }) {
+  return (
+    <div className="flex items-center gap-1 bg-orange-50 dark:bg-stone-800 rounded-lg p-0.5">
+      <button
+        onClick={() => onChange('monthly')}
+        className={cn(
+          'px-2.5 py-1 rounded-md text-xs font-semibold transition-colors',
+          mode === 'monthly'
+            ? 'bg-orange-600 text-white shadow-sm'
+            : 'text-orange-500 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-stone-700'
+        )}
+      >
+        This Month
+      </button>
+      <button
+        onClick={() => onChange('lifetime')}
+        className={cn(
+          'px-2.5 py-1 rounded-md text-xs font-semibold transition-colors',
+          mode === 'lifetime'
+            ? 'bg-orange-600 text-white shadow-sm'
+            : 'text-orange-500 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-stone-700'
+        )}
+      >
+        All Time
+      </button>
+    </div>
+  )
+}
+
+function EntryRow({ entry, mode, compact = false }: { entry: LeaderboardEntry; mode: Mode; compact?: boolean }) {
   const rankStyle = RANK_STYLES[entry.rank]
   const initials = (entry.displayName || 'U')
     .split(' ')
@@ -21,6 +52,8 @@ function EntryRow({ entry, compact = false }: { entry: LeaderboardEntry; compact
     .join('')
     .slice(0, 2)
     .toUpperCase()
+
+  const displayPoints = mode === 'monthly' ? entry.monthlyRajipo : entry.rajipo
 
   return (
     <div
@@ -71,50 +104,56 @@ function EntryRow({ entry, compact = false }: { entry: LeaderboardEntry; compact
       {/* Points */}
       <div className="text-right flex-shrink-0">
         <p className={cn('text-sm font-bold', rankStyle ? rankStyle.text : 'text-orange-700')}>
-          {entry.rajipo.toLocaleString()}
+          {displayPoints.toLocaleString()}
         </p>
-        <p className="text-xs text-orange-300">rajipo</p>
+        <p className="text-xs text-orange-300">{mode === 'monthly' ? 'this month' : 'all time'}</p>
       </div>
     </div>
   )
 }
 
 function UserView({ data }: { data: Extract<LeaderboardData, { isAdmin: false }> }) {
+  const [mode, setMode] = useState<Mode>('monthly')
+  const view: RankedView = data[mode]
+
   return (
     <div className="bg-white dark:bg-stone-900 rounded-3xl shadow-sm border border-orange-100 dark:border-stone-700 overflow-hidden">
-      <div className="px-4 py-3.5 border-b border-orange-50 dark:border-stone-800 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-amber-500" />
-          <h2 className="text-sm font-bold text-orange-900 dark:text-orange-50">Leaderboard</h2>
+      <div className="px-4 py-3.5 border-b border-orange-50 dark:border-stone-800 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <Trophy className="w-4 h-4 text-amber-500 flex-shrink-0" />
+          <h2 className="text-sm font-bold text-orange-900 dark:text-orange-50 truncate">Leaderboard</h2>
           {data.kshetra && (
-            <span className="text-xs bg-orange-100 dark:bg-stone-700 text-orange-600 dark:text-orange-400 font-semibold px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-orange-100 dark:bg-stone-700 text-orange-600 dark:text-orange-400 font-semibold px-2 py-0.5 rounded-full flex-shrink-0">
               {data.kshetra}
             </span>
           )}
         </div>
-        {data.userRank && (
-          <span className="text-xs text-orange-400 font-medium">
-            Your rank: <span className="text-orange-700 font-bold">#{data.userRank}</span>
-          </span>
-        )}
+        <ModeToggle mode={mode} onChange={setMode} />
       </div>
 
+      {view.userRank && (
+        <div className="px-4 pt-2 pb-0">
+          <span className="text-xs text-orange-400 font-medium">
+            Your rank: <span className="text-orange-700 font-bold">#{view.userRank}</span>
+          </span>
+        </div>
+      )}
+
       <div className="divide-y divide-orange-50 dark:divide-stone-800">
-        {data.entries.length === 0 ? (
+        {view.entries.length === 0 ? (
           <p className="text-center text-sm text-orange-300 py-6">No members yet</p>
         ) : (
-          data.entries.map((entry) => <EntryRow key={entry.uid} entry={entry} />)
+          view.entries.map((entry) => <EntryRow key={entry.uid} entry={entry} mode={mode} />)
         )}
 
-        {/* Show current user below top 5 if they're not in it */}
-        {data.userEntry && (
+        {view.userEntry && (
           <>
             <div className="flex items-center gap-2 px-4 py-1.5">
               <div className="flex-1 border-t border-dashed border-orange-200 dark:border-stone-600" />
               <span className="text-xs text-orange-300">your position</span>
               <div className="flex-1 border-t border-dashed border-orange-200 dark:border-stone-600" />
             </div>
-            <EntryRow entry={data.userEntry} />
+            <EntryRow entry={view.userEntry} mode={mode} />
           </>
         )}
       </div>
@@ -123,21 +162,26 @@ function UserView({ data }: { data: Extract<LeaderboardData, { isAdmin: false }>
 }
 
 function AdminView({ data }: { data: Extract<LeaderboardData, { isAdmin: true }> }) {
-  const kshetras = KSHETRA_OPTIONS.filter((k) => (data.groups[k]?.length ?? 0) > 0)
+  const [mode, setMode] = useState<Mode>('monthly')
+  const groups = data[mode]
+  const kshetras = KSHETRA_OPTIONS.filter((k) => (groups[k]?.length ?? 0) > 0)
   const [active, setActive] = useState<string>(kshetras[0] ?? KSHETRA_OPTIONS[0])
-  const entries = data.groups[active] ?? []
+  const entries = groups[active] ?? []
 
   return (
     <div className="bg-white dark:bg-stone-900 rounded-3xl shadow-sm border border-orange-100 dark:border-stone-700 overflow-hidden">
-      <div className="px-4 py-3.5 border-b border-orange-50 dark:border-stone-800 flex items-center gap-2">
-        <Trophy className="w-4 h-4 text-amber-500" />
-        <h2 className="text-sm font-bold text-orange-900 dark:text-orange-50">Leaderboard — All Kshetras</h2>
+      <div className="px-4 py-3.5 border-b border-orange-50 dark:border-stone-800 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Trophy className="w-4 h-4 text-amber-500" />
+          <h2 className="text-sm font-bold text-orange-900 dark:text-orange-50">Leaderboard — All Kshetras</h2>
+        </div>
+        <ModeToggle mode={mode} onChange={setMode} />
       </div>
 
       {/* Kshetra tabs */}
       <div className="flex gap-1.5 px-4 py-2.5 overflow-x-auto border-b border-orange-50 dark:border-stone-800 scrollbar-hide">
         {KSHETRA_OPTIONS.map((k) => {
-          const count = data.groups[k]?.length ?? 0
+          const count = groups[k]?.length ?? 0
           return (
             <button
               key={k}
@@ -166,14 +210,16 @@ function AdminView({ data }: { data: Extract<LeaderboardData, { isAdmin: true }>
       <div className="flex items-center gap-3 px-4 py-2 bg-orange-50/50 dark:bg-stone-800/50">
         <Star className="w-3 h-3 text-orange-300 flex-shrink-0" />
         <span className="flex-1 text-xs text-orange-400 font-medium uppercase tracking-wide">Member</span>
-        <span className="text-xs text-orange-400 font-medium uppercase tracking-wide">Rajipo</span>
+        <span className="text-xs text-orange-400 font-medium uppercase tracking-wide">
+          {mode === 'monthly' ? 'This Month' : 'All Time'}
+        </span>
       </div>
 
       <div className="divide-y divide-orange-50 dark:divide-stone-800 max-h-80 overflow-y-auto">
         {entries.length === 0 ? (
           <p className="text-center text-sm text-orange-300 py-6">No members in this kshetra</p>
         ) : (
-          entries.map((entry) => <EntryRow key={entry.uid} entry={entry} compact />)
+          entries.map((entry) => <EntryRow key={entry.uid} entry={entry} mode={mode} compact />)
         )}
       </div>
     </div>

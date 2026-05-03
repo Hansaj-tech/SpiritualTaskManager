@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
-import { ACTIVITY_IDS, DEFAULT_ACTIVITIES } from '@/lib/constants'
+import { ACTIVITY_IDS, BONUS_ACTIVITY_IDS, DEFAULT_ACTIVITIES } from '@/lib/constants'
 import { format, startOfMonth, endOfMonth } from 'date-fns'
 
 export async function GET(request: NextRequest) {
@@ -33,24 +33,27 @@ export async function GET(request: NextRequest) {
 
     const totalDays = logsSnap.size
 
+    const allIds = [...ACTIVITY_IDS, ...BONUS_ACTIVITY_IDS]
+
     // Count done per activity
     const doneCounts: Record<string, number> = {}
-    for (const id of ACTIVITY_IDS) doneCounts[id] = 0
+    for (const id of allIds) doneCounts[id] = 0
 
     for (const doc of logsSnap.docs) {
       const activities = doc.data().activities as Record<string, { done: boolean }> | undefined
       if (!activities) continue
-      for (const id of ACTIVITY_IDS) {
+      for (const id of allIds) {
         if (activities[id]?.done) doneCounts[id]++
       }
     }
 
-    const activityLog: Record<string, { done: number; total: number; name: string }> = {}
-    for (const id of ACTIVITY_IDS) {
+    const activityLog: Record<string, { done: number; total: number; name: string; isBonus: boolean }> = {}
+    for (const id of allIds) {
       activityLog[id] = {
         done: doneCounts[id],
         total: totalDays,
         name: DEFAULT_ACTIVITIES[id].name,
+        isBonus: BONUS_ACTIVITY_IDS.includes(id as typeof BONUS_ACTIVITY_IDS[number]),
       }
     }
 

@@ -9,6 +9,10 @@ export type ActivityId =
   | 'nitya-prerna-shravan'
   | 'chesta'
   | 'pooja'
+  | 'bhajan'
+  | 'dhyan'
+  | 'seva'
+  | 'satsang-sabha'
 
 export interface ActivityDefinition {
   id: ActivityId
@@ -39,6 +43,8 @@ export interface UserProfile {
   kshetra: string | null
   isAdmin: boolean
   rajipo: number
+  monthlyRajipo: number
+  monthlyRajipoMonth: string
   streak: number
   longestStreak: number
   lastCompletedDate: string | null
@@ -69,6 +75,7 @@ export interface LeaderboardEntry {
   displayName: string
   photoURL: string | null
   rajipo: number
+  monthlyRajipo: number
   tasksCompleted: number
   streak: number
   rank: number

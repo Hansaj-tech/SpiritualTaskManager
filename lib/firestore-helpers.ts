@@ -6,8 +6,8 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { computeStreak, todayKey } from '@/lib/date-utils'
-import { DEFAULT_ACTIVITIES, ACTIVITY_IDS } from '@/lib/constants'
-import type { UserProfile, DayLog, AppConfig, ActivityDefinition, ReminderPref } from '@/types'
+import { DEFAULT_ACTIVITIES, ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
+import type { UserProfile, DayLog, AppConfig, ActivityDefinition, ActivityId, ReminderPref } from '@/types'
 
 function toDate(val: unknown): Date | null {
   if (!val) return null
@@ -25,6 +25,8 @@ export function docToUserProfile(uid: string, data: DocumentData): UserProfile {
     kshetra: data.kshetra ?? null,
     isAdmin: data.isAdmin ?? false,
     rajipo: data.rajipo ?? 0,
+    monthlyRajipo: data.monthlyRajipo ?? 0,
+    monthlyRajipoMonth: data.monthlyRajipoMonth ?? '',
     streak: data.streak ?? 0,
     longestStreak: data.longestStreak ?? 0,
     lastCompletedDate: data.lastCompletedDate ?? null,
@@ -70,6 +72,8 @@ export async function getOrCreateUserProfile(
     kshetra: null,
     isAdmin: false,
     rajipo: 0,
+    monthlyRajipo: 0,
+    monthlyRajipoMonth: '',
     streak: 0,
     longestStreak: 0,
     lastCompletedDate: null,
@@ -122,6 +126,9 @@ export async function saveActivityToggle(
   )
   const newLongest = Math.max(streak, userProfile.longestStreak)
 
+  const currentMonth = dateKey.slice(0, 7) // YYYY-MM
+  const isNewMonth = (userProfile.monthlyRajipoMonth ?? '') !== currentMonth
+
   const batch = writeBatch(db)
 
   const logRef = doc(db, 'users', uid, 'activityLogs', dateKey)
@@ -136,6 +143,8 @@ export async function saveActivityToggle(
   const userRef = doc(db, 'users', uid)
   batch.update(userRef, {
     rajipo: increment(rajipoelta),
+    monthlyRajipo: isNewMonth ? Math.max(0, rajipoelta) : increment(rajipoelta),
+    monthlyRajipoMonth: currentMonth,
     streak,
     longestStreak: newLongest,
     lastCompletedDate,
@@ -148,21 +157,14 @@ export async function saveActivityToggle(
 export async function getActivityDefs(): Promise<ActivityDefinition[]> {
   const ref = doc(db, 'config', 'activities')
   const snap = await getDoc(ref)
-  if (!snap.exists()) {
-    return Object.entries(DEFAULT_ACTIVITIES).map(([id, def]) => ({
-      id: id as ActivityDefinition['id'],
-      ...def,
-    }))
-  }
-  const data = snap.data()
-  const acts = data.activities as Record<string, ActivityDefinition> | undefined
-  if (!acts) {
-    return Object.entries(DEFAULT_ACTIVITIES).map(([id, def]) => ({
-      id: id as ActivityDefinition['id'],
-      ...def,
-    }))
-  }
-  return Object.values(acts).sort((a, b) => a.order - b.order)
+  const stored = snap.exists()
+    ? (snap.data().activities as Record<string, ActivityDefinition> | undefined)
+    : undefined
+
+  const allIds = [...ACTIVITY_IDS, ...BONUS_ACTIVITY_IDS]
+  return allIds
+    .map((id) => stored?.[id] ?? { id: id as ActivityId, ...DEFAULT_ACTIVITIES[id] })
+    .sort((a, b) => a.order - b.order)
 }
 
 export async function getAppConfig(): Promise<AppConfig> {
@@ -228,7 +230,11 @@ export async function updateActivityPoints(
       )
 
   for (const [id, points] of Object.entries(activityUpdates)) {
-    if (existing[id]) existing[id].points = points
+    if (existing[id]) {
+      existing[id].points = points
+    } else if (DEFAULT_ACTIVITIES[id as ActivityId]) {
+      existing[id] = { id: id as ActivityId, ...DEFAULT_ACTIVITIES[id as ActivityId], points }
+    }
   }
   await setDoc(ref, { activities: existing }, { merge: true })
 }

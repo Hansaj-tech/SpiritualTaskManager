@@ -2,6 +2,32 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
 import type { LeaderboardEntry } from '@/types'
 
+function currentMonthKey(): string {
+  return new Date().toISOString().slice(0, 7)
+}
+
+function buildEntry(id: string, data: FirebaseFirestore.DocumentData, callerUid: string): Omit<LeaderboardEntry, 'rank'> {
+  const month = currentMonthKey()
+  const storedMonth = (data.monthlyRajipoMonth as string) ?? ''
+  const monthlyRajipo = storedMonth === month ? ((data.monthlyRajipo as number) ?? 0) : 0
+  return {
+    uid: id,
+    displayName: data.displayName ?? 'Unknown',
+    photoURL: data.photoURL ?? null,
+    rajipo: data.rajipo ?? 0,
+    monthlyRajipo,
+    tasksCompleted: Math.round((data.rajipo ?? 0) / 10),
+    streak: data.streak ?? 0,
+    isCurrentUser: id === callerUid,
+  }
+}
+
+function ranked(entries: Omit<LeaderboardEntry, 'rank'>[], key: 'rajipo' | 'monthlyRajipo'): LeaderboardEntry[] {
+  return [...entries]
+    .sort((a, b) => b[key] - a[key])
+    .map((e, i) => ({ ...e, rank: i + 1 }))
+}
+
 export async function GET(request: NextRequest) {
   if (
     !process.env.FIREBASE_ADMIN_PROJECT_ID ||
@@ -26,62 +52,47 @@ export async function GET(request: NextRequest) {
     if (isAdmin) {
       const usersSnap = await adminDb().collection('users').limit(500).get()
 
-      const groups: Record<string, LeaderboardEntry[]> = {}
+      const byKshetra: Record<string, Omit<LeaderboardEntry, 'rank'>[]> = {}
       usersSnap.docs.forEach((doc) => {
         const data = doc.data()
         const kshetra = (data.kshetra as string) ?? 'Other'
-        if (!groups[kshetra]) groups[kshetra] = []
-        groups[kshetra].push({
-          uid: doc.id,
-          displayName: data.displayName ?? 'Unknown',
-          photoURL: data.photoURL ?? null,
-          rajipo: data.rajipo ?? 0,
-          tasksCompleted: Math.round((data.rajipo ?? 0) / 10),
-          streak: data.streak ?? 0,
-          rank: 0,
-          isCurrentUser: doc.id === decoded.uid,
-        })
+        if (!byKshetra[kshetra]) byKshetra[kshetra] = []
+        byKshetra[kshetra].push(buildEntry(doc.id, data, decoded.uid))
       })
 
-      for (const k of Object.keys(groups)) {
-        groups[k]
-          .sort((a, b) => b.rajipo - a.rajipo)
-          .forEach((e, i) => { e.rank = i + 1 })
+      const monthly: Record<string, LeaderboardEntry[]> = {}
+      const lifetime: Record<string, LeaderboardEntry[]> = {}
+      for (const k of Object.keys(byKshetra)) {
+        monthly[k] = ranked(byKshetra[k], 'monthlyRajipo')
+        lifetime[k] = ranked(byKshetra[k], 'rajipo')
       }
 
-      return NextResponse.json({ isAdmin: true, groups })
+      return NextResponse.json({ isAdmin: true, monthly, lifetime })
     } else {
       const kshetra = callerData.kshetra as string | null
-      if (!kshetra) return NextResponse.json({ isAdmin: false, entries: [], userRank: null, kshetra: null })
+      if (!kshetra) {
+        const empty = { entries: [], userRank: null, userEntry: null }
+        return NextResponse.json({ isAdmin: false, monthly: empty, lifetime: empty, kshetra: null })
+      }
 
       const usersSnap = await adminDb().collection('users').where('kshetra', '==', kshetra).get()
+      const entries = usersSnap.docs.map((doc) => buildEntry(doc.id, doc.data(), decoded.uid))
 
-      const all = usersSnap.docs
-        .map((doc) => {
-          const data = doc.data()
-          return {
-            uid: doc.id,
-            displayName: data.displayName ?? 'Unknown',
-            photoURL: data.photoURL ?? null,
-            rajipo: data.rajipo ?? 0,
-            tasksCompleted: Math.round((data.rajipo ?? 0) / 10),
-            streak: data.streak ?? 0,
-            rank: 0,
-            isCurrentUser: doc.id === decoded.uid,
-          }
-        })
-        .sort((a, b) => b.rajipo - a.rajipo)
-
-      all.forEach((e, i) => { e.rank = i + 1 })
-
-      const top5 = all.slice(0, 5)
-      const userEntry = all.find((e) => e.uid === decoded.uid)
+      function buildView(key: 'rajipo' | 'monthlyRajipo') {
+        const sorted = ranked(entries, key)
+        const top5 = sorted.slice(0, 5)
+        const userEntry = sorted.find((e) => e.uid === decoded.uid)
+        return {
+          entries: top5,
+          userRank: userEntry?.rank ?? null,
+          userEntry: userEntry && (userEntry.rank ?? 0) > 5 ? userEntry : null,
+        }
+      }
 
       return NextResponse.json({
         isAdmin: false,
-        entries: top5,
-        userRank: userEntry?.rank ?? null,
-        userEntry: userEntry && (userEntry.rank ?? 0) > 5 ? userEntry : null,
+        monthly: buildView('monthlyRajipo'),
+        lifetime: buildView('rajipo'),
         kshetra,
       })
     }

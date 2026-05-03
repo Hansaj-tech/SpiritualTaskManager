@@ -13,7 +13,8 @@ import { ActivityRow } from '@/components/dashboard/activity-row'
 import { ReminderModal } from '@/components/reminders/reminder-modal'
 import { LeaderboardCard } from '@/components/leaderboard/leaderboard-card'
 import { useLeaderboard } from '@/hooks/use-leaderboard'
-import { Loader2, Bell, X, CalendarDays } from 'lucide-react'
+import { Loader2, Bell, X, CalendarDays, Star } from 'lucide-react'
+import { ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
 
 export default function DashboardPage() {
   const { userProfile } = useAuth()
@@ -56,7 +57,10 @@ export default function DashboardPage() {
     setNotifDismissed(true)
   }
 
-  const completedCount = Object.values(todayLog.activities).filter((e) => e.done).length
+  const completedCount = ACTIVITY_IDS.filter((id) => todayLog.activities[id]?.done).length
+  const mainActivityDefs = activityDefs.filter((a) => ACTIVITY_IDS.includes(a.id as typeof ACTIVITY_IDS[number]))
+  const bonusActivityDefs = activityDefs.filter((a) => BONUS_ACTIVITY_IDS.includes(a.id as typeof BONUS_ACTIVITY_IDS[number]))
+  const bonusCompletedCount = BONUS_ACTIVITY_IDS.filter((id) => todayLog.activities[id]?.done).length
   const openActivity = activityDefs.find((a) => a.id === openReminderId)
 
   if (loading) {
@@ -137,7 +141,7 @@ export default function DashboardPage() {
         />
 
         {/* Progress bar */}
-        <ProgressBar completed={completedCount} total={activityDefs.length} />
+        <ProgressBar completed={completedCount} total={mainActivityDefs.length} />
 
         {/* Daily quote */}
         {appConfig.dailyQuote && (
@@ -149,11 +153,11 @@ export default function DashboardPage() {
           <div className="px-4 py-3.5 border-b border-orange-50 dark:border-stone-800 flex items-center justify-between">
             <h2 className="text-sm font-bold text-orange-900 dark:text-orange-50">Today&apos;s Aahanik</h2>
             <span className="text-xs text-orange-400 font-medium">
-              {completedCount}/{activityDefs.length} done
+              {completedCount}/{mainActivityDefs.length} done
             </span>
           </div>
           <div className="divide-y divide-orange-50 dark:divide-stone-800">
-            {activityDefs.map((activity) => (
+            {mainActivityDefs.map((activity) => (
               <ActivityRow
                 key={activity.id}
                 activity={activity}
@@ -162,6 +166,38 @@ export default function DashboardPage() {
                 reminder={reminders[activity.id]}
                 onToggle={(done) => toggleActivity(activity.id, done)}
                 onReminderOpen={() => setOpenReminderId(activity.id)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Bonus Activities */}
+        <div className="bg-white dark:bg-stone-900 rounded-3xl shadow-sm border border-orange-200 dark:border-orange-900/40 overflow-hidden">
+          <div className="px-4 py-3.5 border-b border-orange-100 dark:border-stone-800 flex items-center justify-between bg-orange-50/50 dark:bg-orange-950/20">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-md bg-orange-500 flex items-center justify-center flex-shrink-0">
+                <Star className="w-3 h-3 text-white fill-white" />
+              </div>
+              <h2 className="text-sm font-bold text-orange-900 dark:text-orange-50">Bonus Activities</h2>
+              {!todayLog.allCompleted && (
+                <span className="text-xs text-orange-400 font-normal">· Complete all daily to unlock</span>
+              )}
+            </div>
+            <span className="text-xs text-orange-400 font-medium">
+              {bonusCompletedCount}/{bonusActivityDefs.length} done
+            </span>
+          </div>
+          <div className="divide-y divide-orange-50 dark:divide-stone-800">
+            {bonusActivityDefs.map((activity) => (
+              <ActivityRow
+                key={activity.id}
+                activity={activity}
+                logEntry={todayLog.activities[activity.id]}
+                activityStreak={activityStreaks[activity.id] ?? 0}
+                reminder={reminders[activity.id]}
+                onToggle={(done) => toggleActivity(activity.id, done)}
+                onReminderOpen={() => setOpenReminderId(activity.id)}
+                disabled={!todayLog.allCompleted}
               />
             ))}
           </div>
