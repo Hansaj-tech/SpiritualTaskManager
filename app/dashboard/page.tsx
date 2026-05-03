@@ -172,16 +172,13 @@ export default function DashboardPage() {
         </div>
 
         {/* Bonus Activities */}
-        <div className="bg-white dark:bg-stone-900 rounded-3xl shadow-sm border border-orange-200 dark:border-orange-900/40 overflow-hidden">
-          <div className="px-4 py-3.5 border-b border-orange-100 dark:border-stone-800 flex items-center justify-between bg-orange-50/50 dark:bg-orange-950/20">
+        <div className="bg-white dark:bg-stone-900 rounded-3xl shadow-sm border border-orange-100 dark:border-stone-700 overflow-hidden">
+          <div className="px-4 py-3.5 border-b border-orange-50 dark:border-stone-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded-md bg-orange-500 flex items-center justify-center flex-shrink-0">
                 <Star className="w-3 h-3 text-white fill-white" />
               </div>
               <h2 className="text-sm font-bold text-orange-900 dark:text-orange-50">Bonus Activities</h2>
-              {!todayLog.allCompleted && (
-                <span className="text-xs text-orange-400 font-normal">· Complete all daily to unlock</span>
-              )}
             </div>
             <span className="text-xs text-orange-400 font-medium">
               {bonusCompletedCount}/{bonusActivityDefs.length} done
@@ -197,7 +194,6 @@ export default function DashboardPage() {
                 reminder={reminders[activity.id]}
                 onToggle={(done) => toggleActivity(activity.id, done)}
                 onReminderOpen={() => setOpenReminderId(activity.id)}
-                disabled={!todayLog.allCompleted}
               />
             ))}
           </div>
