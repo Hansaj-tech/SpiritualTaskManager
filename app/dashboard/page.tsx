@@ -57,10 +57,11 @@ export default function DashboardPage() {
     setNotifDismissed(true)
   }
 
-  const completedCount = ACTIVITY_IDS.filter((id) => todayLog.activities[id]?.done).length
-  const mainActivityDefs = activityDefs.filter((a) => ACTIVITY_IDS.includes(a.id as typeof ACTIVITY_IDS[number]))
-  const bonusActivityDefs = activityDefs.filter((a) => BONUS_ACTIVITY_IDS.includes(a.id as typeof BONUS_ACTIVITY_IDS[number]))
-  const bonusCompletedCount = BONUS_ACTIVITY_IDS.filter((id) => todayLog.activities[id]?.done).length
+  const bonusIdSet = new Set<string>(BONUS_ACTIVITY_IDS)
+  const mainActivityDefs = activityDefs.filter(a => !bonusIdSet.has(a.id))
+  const bonusActivityDefs = activityDefs.filter(a => bonusIdSet.has(a.id))
+  const completedCount = mainActivityDefs.filter(a => todayLog.activities[a.id]?.done).length
+  const bonusCompletedCount = bonusActivityDefs.filter(a => todayLog.activities[a.id]?.done).length
   const openActivity = activityDefs.find((a) => a.id === openReminderId)
 
   if (loading) {
@@ -171,20 +172,18 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Bonus Activities */}
-        <div className="bg-white dark:bg-stone-900 rounded-3xl shadow-sm border border-orange-100 dark:border-stone-700 overflow-hidden">
-          <div className="px-4 py-3.5 border-b border-orange-50 dark:border-stone-800 flex items-center justify-between">
+        {/* Bonus Rajipo */}
+        <div className="bg-orange-50 dark:bg-orange-950/30 rounded-3xl shadow-sm border border-orange-200 dark:border-orange-800/50 overflow-hidden">
+          <div className="px-4 py-3.5 border-b border-orange-200 dark:border-orange-800/50 bg-orange-500 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded-md bg-orange-500 flex items-center justify-center flex-shrink-0">
-                <Star className="w-3 h-3 text-white fill-white" />
-              </div>
-              <h2 className="text-sm font-bold text-orange-900 dark:text-orange-50">Bonus Activities</h2>
+              <Star className="w-4 h-4 text-white fill-white flex-shrink-0" />
+              <h2 className="text-sm font-bold text-white">Bonus Rajipo</h2>
             </div>
-            <span className="text-xs text-orange-400 font-medium">
+            <span className="text-xs text-orange-100 font-medium">
               {bonusCompletedCount}/{bonusActivityDefs.length} done
             </span>
           </div>
-          <div className="divide-y divide-orange-50 dark:divide-stone-800">
+          <div className="divide-y divide-orange-100 dark:divide-orange-900/40">
             {bonusActivityDefs.map((activity) => (
               <ActivityRow
                 key={activity.id}
