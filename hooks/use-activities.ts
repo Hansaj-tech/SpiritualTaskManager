@@ -81,7 +81,11 @@ export function useActivities(): ActivityState {
     return unsub
   }, [user])
 
-  // Compute per-activity streaks from last 30 logs
+  // Stable key encoding which activities are done today — drives the streak effect
+  const doneKey = [...ACTIVITY_IDS, ...BONUS_ACTIVITY_IDS]
+    .map(id => todayLog.activities[id]?.done ? '1' : '0').join('')
+
+  // Compute per-activity streaks whenever the done-set changes
   useEffect(() => {
     if (!user) return
     let cancelled = false
@@ -111,7 +115,8 @@ export function useActivities(): ActivityState {
       setActivityStreaks(streaks)
     })
     return () => { cancelled = true }
-  }, [user, todayLog.totalPoints])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, doneKey])
 
   // On Sundays: compute total tasks done for the week (Mon–Sun = max 70)
   useEffect(() => {
