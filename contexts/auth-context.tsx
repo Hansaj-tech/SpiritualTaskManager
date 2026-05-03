@@ -13,9 +13,11 @@ import {
   signOut,
   type User,
 } from 'firebase/auth'
-import { auth, googleProvider } from '@/lib/firebase'
+import { onSnapshot, doc } from 'firebase/firestore'
+import { auth, db, googleProvider } from '@/lib/firebase'
 import {
   getOrCreateUserProfile,
+  docToUserProfile,
   updateUserKshetra,
   updateUserProfileData,
 } from '@/lib/firestore-helpers'
@@ -41,9 +43,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+    let unsubProfile: (() => void) | null = null
+
+    const unsubAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Tear down previous profile listener whenever auth state changes
+      if (unsubProfile) { unsubProfile(); unsubProfile = null }
+
       if (firebaseUser) {
-        // Set auth cookie immediately so proxy lets the user through
         Cookies.set('aahanik-uid', firebaseUser.uid, { expires: 30, sameSite: 'Lax' })
         setUser(firebaseUser)
         try {
@@ -59,6 +65,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch {
           // Firestore unavailable — user can still navigate; profile loads on retry
         }
+
+        // Keep userProfile in sync with Firestore in real-time so streak/rajipo
+        // values are always current (not frozen at login time).
+        unsubProfile = onSnapshot(doc(db, 'users', firebaseUser.uid), (snap) => {
+          if (snap.exists()) {
+            const updated = docToUserProfile(firebaseUser.uid, snap.data())
+            setUserProfile(updated)
+            if (updated.kshetra) {
+              Cookies.set('aahanik-onboarded', '1', { expires: 30, sameSite: 'Lax' })
+            }
+          }
+        })
       } else {
         setUser(null)
         setUserProfile(null)
@@ -67,7 +85,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setLoading(false)
     })
-    return unsub
+
+    return () => {
+      unsubAuth()
+      if (unsubProfile) unsubProfile()
+    }
   }, [])
 
   async function loginWithGoogle() {

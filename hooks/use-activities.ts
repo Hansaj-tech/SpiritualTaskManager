@@ -84,13 +84,13 @@ export function useActivities(): ActivityState {
   // Compute per-activity streaks from last 30 logs
   useEffect(() => {
     if (!user) return
+    let cancelled = false
     const today = todayKey()
     const currentActivities = todayLog.activities
     const logsRef = collection(db, 'users', user.uid, 'activityLogs')
     const q = query(logsRef, orderBy('date', 'desc'), limit(31))
     getDocs(q).then((snap) => {
-      // Exclude today from Firestore data — use real-time todayLog.activities
-      // instead to avoid the race between the optimistic update and the write.
+      if (cancelled) return
       const historicalLogs = snap.docs
         .map((d) => ({
           date: d.data().date as string,
@@ -110,6 +110,7 @@ export function useActivities(): ActivityState {
       }
       setActivityStreaks(streaks)
     })
+    return () => { cancelled = true }
   }, [user, todayLog.totalPoints])
 
   // On Sundays: compute total tasks done for the week (Mon–Sun = max 70)
