@@ -18,6 +18,7 @@ export const BONUS_ACTIVITY_IDS: ActivityId[] = [
   'dhyan',
   'seva',
   'satsang-sabha',
+  'niyam',
 ]
 
 export const DEFAULT_ACTIVITIES: Record<ActivityId, { name: string; order: number; points: number }> = {
@@ -35,6 +36,7 @@ export const DEFAULT_ACTIVITIES: Record<ActivityId, { name: string; order: numbe
   'dhyan':                 { name: 'Dhyan',                   order: 12, points: 10 },
   'seva':                  { name: 'Seva',                    order: 13, points: 10 },
   'satsang-sabha':         { name: 'Satsang Sabha',           order: 14, points: 10 },
+  'niyam':                 { name: 'Niyam',                   order: 15, points: 10 },
 }
 
 export const KSHETRA_OPTIONS = [

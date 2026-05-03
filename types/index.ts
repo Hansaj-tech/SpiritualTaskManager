@@ -13,6 +13,7 @@ export type ActivityId =
   | 'dhyan'
   | 'seva'
   | 'satsang-sabha'
+  | 'niyam'
 
 export interface ActivityDefinition {
   id: ActivityId

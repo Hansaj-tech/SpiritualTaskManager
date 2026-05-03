@@ -223,17 +223,47 @@ export async function updateActivityPoints(
 ): Promise<void> {
   const ref = doc(db, 'config', 'activities')
   const snap = await getDoc(ref)
-  const existing = snap.exists()
-    ? (snap.data().activities as Record<string, ActivityDefinition>)
-    : Object.fromEntries(
-        Object.entries(DEFAULT_ACTIVITIES).map(([id, def]) => [id, { id, ...def }])
-      )
+  const existing: Record<string, ActivityDefinition> = snap.exists()
+    ? (snap.data().activities as Record<string, ActivityDefinition>) ?? {}
+    : {}
+
+  // Ensure all activities exist (including bonus) so they're visible in Firestore
+  for (const id of [...ACTIVITY_IDS, ...BONUS_ACTIVITY_IDS]) {
+    if (!existing[id]) {
+      existing[id] = { id: id as ActivityId, ...DEFAULT_ACTIVITIES[id] }
+    }
+  }
 
   for (const [id, points] of Object.entries(activityUpdates)) {
     if (existing[id]) {
       existing[id].points = points
     } else if (DEFAULT_ACTIVITIES[id as ActivityId]) {
       existing[id] = { id: id as ActivityId, ...DEFAULT_ACTIVITIES[id as ActivityId], points }
+    }
+  }
+  await setDoc(ref, { activities: existing }, { merge: true })
+}
+
+export async function updateActivities(
+  updates: Record<string, { name?: string; points?: number }>
+): Promise<void> {
+  const ref = doc(db, 'config', 'activities')
+  const snap = await getDoc(ref)
+  const existing: Record<string, ActivityDefinition> = snap.exists()
+    ? (snap.data().activities as Record<string, ActivityDefinition>) ?? {}
+    : {}
+
+  // Ensure all activities exist so they're always visible in Firestore
+  for (const id of [...ACTIVITY_IDS, ...BONUS_ACTIVITY_IDS]) {
+    if (!existing[id]) {
+      existing[id] = { id: id as ActivityId, ...DEFAULT_ACTIVITIES[id] }
+    }
+  }
+
+  for (const [id, update] of Object.entries(updates)) {
+    if (existing[id]) {
+      if (update.name !== undefined) existing[id].name = update.name
+      if (update.points !== undefined) existing[id].points = update.points
     }
   }
   await setDoc(ref, { activities: existing }, { merge: true })
