@@ -76,7 +76,7 @@ export function ActivityRow({
           'flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-medium transition-all',
           reminder?.enabled
             ? 'bg-orange-100 dark:bg-stone-700 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-stone-600'
-            : 'text-orange-200 dark:text-stone-600 hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-stone-800'
+            : 'text-orange-400 dark:text-orange-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-stone-800'
         )}
         title="Set reminder"
       >

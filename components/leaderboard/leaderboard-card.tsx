@@ -97,7 +97,9 @@ function EntryRow({ entry, mode, compact = false }: { entry: LeaderboardEntry; m
             {entry.streak}d
           </span>
           <span className="text-xs text-orange-300">·</span>
-          <span className="text-xs text-orange-400">{entry.tasksCompleted} tasks</span>
+          <span className="text-xs text-orange-400">
+            {mode === 'monthly' ? Math.round(entry.monthlyRajipo / 10) : entry.tasksCompleted} tasks
+          </span>
         </div>
       </div>
 
