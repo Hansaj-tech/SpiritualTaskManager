@@ -32,6 +32,8 @@ export interface ActivityState {
   toggleActivity: (activityId: string, done: boolean) => Promise<void>
 }
 
+type HistoryLog = { date: string; activities: Record<string, { done: boolean }> }
+
 function emptyLog(): DayLog {
   return { date: todayKey(), activities: {}, totalPoints: 0, allCompleted: false }
 }
@@ -40,6 +42,7 @@ export function useActivities(): ActivityState {
   const { user, userProfile } = useAuth()
   const [activityDefs, setActivityDefs] = useState<ActivityDefinition[]>([])
   const [todayLog, setTodayLog] = useState<DayLog>(emptyLog)
+  const [historyLogs, setHistoryLogs] = useState<HistoryLog[]>([])
   const [activityStreaks, setActivityStreaks] = useState<Record<string, number>>({})
   const [appConfig, setAppConfig] = useState<AppConfig>({ dailyQuote: '', guruImages: [] })
   const [weeklyTaskCount, setWeeklyTaskCount] = useState<number | null>(null)
@@ -81,42 +84,41 @@ export function useActivities(): ActivityState {
     return unsub
   }, [user])
 
-  // Stable key encoding which activities are done today — drives the streak effect
-  const doneKey = [...ACTIVITY_IDS, ...BONUS_ACTIVITY_IDS]
-    .map(id => todayLog.activities[id]?.done ? '1' : '0').join('')
-
-  // Compute per-activity streaks whenever the done-set changes
+  // Real-time listener for the last 30 historical logs (excludes today)
+  // Using onSnapshot instead of getDocs eliminates all async race conditions
   useEffect(() => {
     if (!user) return
-    let cancelled = false
     const today = todayKey()
-    const currentActivities = todayLog.activities
     const logsRef = collection(db, 'users', user.uid, 'activityLogs')
     const q = query(logsRef, orderBy('date', 'desc'), limit(31))
-    getDocs(q).then((snap) => {
-      if (cancelled) return
-      const historicalLogs = snap.docs
-        .map((d) => ({
-          date: d.data().date as string,
-          activities: d.data().activities as Record<string, { done: boolean }>,
-        }))
-        .filter((log) => log.date !== today)
-
-      const streaks: Record<string, number> = {}
-      for (const id of [...ACTIVITY_IDS, ...BONUS_ACTIVITY_IDS]) {
-        const historicalDone = historicalLogs
-          .filter((log) => log.activities?.[id]?.done)
-          .map((log) => log.date)
-        const doneDates = currentActivities[id]?.done
-          ? [today, ...historicalDone]
-          : historicalDone
-        streaks[id] = computeActivityStreak(doneDates, today)
-      }
-      setActivityStreaks(streaks)
+    return onSnapshot(q, (snap) => {
+      setHistoryLogs(
+        snap.docs
+          .map(d => ({
+            date: d.data().date as string,
+            activities: d.data().activities as Record<string, { done: boolean }>,
+          }))
+          .filter(log => log.date !== today)
+      )
     })
-    return () => { cancelled = true }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, doneKey])
+  }, [user])
+
+  // Recompute streaks synchronously whenever today's done-set or history changes
+  // No async, no race condition, no cancellation needed
+  useEffect(() => {
+    const today = todayKey()
+    const streaks: Record<string, number> = {}
+    for (const id of [...ACTIVITY_IDS, ...BONUS_ACTIVITY_IDS]) {
+      const histDone = historyLogs
+        .filter(log => log.activities?.[id]?.done)
+        .map(log => log.date)
+      const doneDates = todayLog.activities[id]?.done
+        ? [today, ...histDone]
+        : histDone
+      streaks[id] = computeActivityStreak(doneDates, today)
+    }
+    setActivityStreaks(streaks)
+  }, [todayLog.activities, historyLogs])
 
   // On Sundays: compute total tasks done for the week (Mon–Sun = max 70)
   useEffect(() => {
