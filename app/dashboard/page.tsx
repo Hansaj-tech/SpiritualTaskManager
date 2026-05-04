@@ -23,6 +23,7 @@ export default function DashboardPage() {
     activityDefs,
     todayLog,
     activityStreaks,
+    mainStreak,
     appConfig,
     weeklyTaskCount,
     loading,
@@ -136,7 +137,7 @@ export default function DashboardPage() {
         {/* Stats card */}
         <StatsCard
           rajipo={userProfile?.rajipo ?? 0}
-          streak={userProfile?.streak ?? 0}
+          streak={mainStreak}
           todayPoints={todayLog.totalPoints}
           guruImages={appConfig.guruImages}
         />

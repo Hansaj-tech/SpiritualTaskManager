@@ -26,6 +26,7 @@ export interface ActivityState {
   activityDefs: ActivityDefinition[]
   todayLog: DayLog
   activityStreaks: Record<string, number>
+  mainStreak: number
   appConfig: AppConfig
   weeklyTaskCount: number | null
   loading: boolean
@@ -44,6 +45,7 @@ export function useActivities(): ActivityState {
   const [todayLog, setTodayLog] = useState<DayLog>(emptyLog)
   const [historyLogs, setHistoryLogs] = useState<HistoryLog[]>([])
   const [activityStreaks, setActivityStreaks] = useState<Record<string, number>>({})
+  const [mainStreak, setMainStreak] = useState(0)
   const [appConfig, setAppConfig] = useState<AppConfig>({ dailyQuote: '', guruImages: [] })
   const [weeklyTaskCount, setWeeklyTaskCount] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
@@ -103,10 +105,11 @@ export function useActivities(): ActivityState {
     })
   }, [user])
 
-  // Recompute streaks synchronously whenever today's done-set or history changes
-  // No async, no race condition, no cancellation needed
+  // Recompute all streaks synchronously whenever today's done-set or history changes
   useEffect(() => {
     const today = todayKey()
+
+    // Per-activity streaks
     const streaks: Record<string, number> = {}
     for (const id of [...ACTIVITY_IDS, ...BONUS_ACTIVITY_IDS]) {
       const histDone = historyLogs
@@ -118,6 +121,14 @@ export function useActivities(): ActivityState {
       streaks[id] = computeActivityStreak(doneDates, today)
     }
     setActivityStreaks(streaks)
+
+    // Main (all-10) streak
+    const allDoneToday = ACTIVITY_IDS.every(id => todayLog.activities[id]?.done)
+    const histCompleted = historyLogs
+      .filter(log => ACTIVITY_IDS.every(id => log.activities?.[id]?.done))
+      .map(log => log.date)
+    const mainDates = allDoneToday ? [today, ...histCompleted] : histCompleted
+    setMainStreak(computeActivityStreak(mainDates, today))
   }, [todayLog.activities, historyLogs])
 
   // On Sundays: compute total tasks done for the week (Mon–Sun = max 70)
@@ -142,6 +153,20 @@ export function useActivities(): ActivityState {
       if (!user || !userProfile) return
       const def = activityDefs.find((a) => a.id === activityId)
       if (!def) return
+
+      // Pre-compute streak from post-toggle state before the optimistic update
+      const today = todayKey()
+      const nextActivities = { ...todayLog.activities, [activityId]: { done } }
+      const willAllComplete = ACTIVITY_IDS.every(id => nextActivities[id]?.done)
+      const histCompleted = historyLogs
+        .filter(log => ACTIVITY_IDS.every(id => log.activities?.[id]?.done))
+        .map(log => log.date)
+        .sort((a, b) => b.localeCompare(a))
+      const streakDates = willAllComplete ? [today, ...histCompleted] : histCompleted
+      const streakData = {
+        streak: computeActivityStreak(streakDates, today),
+        lastCompletedDate: willAllComplete ? today : (histCompleted[0] ?? null),
+      }
 
       // Optimistic update
       setTodayLog((prev) => {
@@ -168,11 +193,12 @@ export function useActivities(): ActivityState {
         def.points,
         todayLog,
         userProfile,
-        activityDefs
+        activityDefs,
+        streakData
       )
     },
-    [user, userProfile, activityDefs, todayLog]
+    [user, userProfile, activityDefs, todayLog, historyLogs]
   )
 
-  return { activityDefs, todayLog, activityStreaks, appConfig, weeklyTaskCount, loading, toggleActivity }
+  return { activityDefs, todayLog, activityStreaks, mainStreak, appConfig, weeklyTaskCount, loading, toggleActivity }
 }

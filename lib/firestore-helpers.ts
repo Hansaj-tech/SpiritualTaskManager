@@ -5,7 +5,7 @@ import {
   type DocumentData,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { computeActivityStreak, todayKey } from '@/lib/date-utils'
+import { todayKey } from '@/lib/date-utils'
 import { DEFAULT_ACTIVITIES, ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
 import type { UserProfile, DayLog, AppConfig, ActivityDefinition, ActivityId, ReminderPref } from '@/types'
 
@@ -92,7 +92,8 @@ export async function saveActivityToggle(
   pointsEarned: number,
   currentLog: DayLog,
   userProfile: UserProfile,
-  activityDefs: ActivityDefinition[]
+  activityDefs: ActivityDefinition[],
+  streakData: { streak: number; lastCompletedDate: string | null }
 ): Promise<void> {
   const dateKey = todayKey()
 
@@ -118,39 +119,7 @@ export async function saveActivityToggle(
   const allCompleted = ACTIVITY_IDS.every(id => updatedActivities[id]?.done)
   const rajipoelta = newTotal - (currentLog.totalPoints ?? 0)
 
-  // Compute main streak
-  let streak: number
-  let lastCompletedDate: string | null = userProfile.lastCompletedDate
-
-  if (!allCompleted) {
-    if (userProfile.lastCompletedDate === dateKey) {
-      // User completed all 10 earlier today but has now unchecked one — revert streak
-      const logsRef2 = collection(db, 'users', uid, 'activityLogs')
-      const recentSnap = await getDocs(query(logsRef2, orderBy('date', 'desc'), limit(60)))
-      const histCompleted = recentSnap.docs
-        .filter(d => d.data().allCompleted === true && d.data().date !== dateKey)
-        .map(d => d.data().date as string)
-      streak = computeActivityStreak(histCompleted, dateKey)
-      lastCompletedDate = histCompleted.length > 0 ? histCompleted[0] : null
-    } else {
-      streak = userProfile.streak
-    }
-  } else if (userProfile.lastCompletedDate === dateKey) {
-    // Already recorded a completion for today — no change
-    streak = userProfile.streak
-  } else {
-    // All 10 main activities completed for the first time today.
-    // Recalculate from activityLogs (source of truth) so any previously
-    // corrupted userProfile.streak value doesn't carry forward.
-    const logsRef2 = collection(db, 'users', uid, 'activityLogs')
-    const recentSnap = await getDocs(query(logsRef2, orderBy('date', 'desc'), limit(60)))
-    const histCompleted = recentSnap.docs
-      .filter(d => d.data().allCompleted === true && d.data().date !== dateKey)
-      .map(d => d.data().date as string)
-    streak = computeActivityStreak([dateKey, ...histCompleted], dateKey)
-    lastCompletedDate = dateKey
-  }
-
+  const { streak, lastCompletedDate } = streakData
   const newLongest = Math.max(streak, userProfile.longestStreak)
 
   const currentMonth = dateKey.slice(0, 7) // YYYY-MM
