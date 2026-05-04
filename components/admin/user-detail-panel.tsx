@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useAdminUserDetail } from '@/hooks/use-admin'
-import { useAuth } from '@/contexts/auth-context'
-import { auth } from '@/lib/firebase'
 import { getActivityDefs } from '@/lib/firestore-helpers'
 import { ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
 import type { AdminUser, ActivityStats } from '@/hooks/use-admin'
@@ -17,42 +15,13 @@ interface UserDetailPanelProps {
 type Period = 'month' | 'lifetime'
 
 export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
-  const { userProfile: viewer } = useAuth()
   const { monthlyLog, lifetimeLog, monthlyDays, lifetimeDays, loading, error } = useAdminUserDetail(uid)
   const [period, setPeriod] = useState<Period>('month')
-  const [kshetraAdminState, setKshetraAdminState] = useState<boolean | undefined>(undefined)
-  const [toggling, setToggling] = useState(false)
-  const [toggleError, setToggleError] = useState<string | null>(null)
   const [activityDefs, setActivityDefs] = useState<ActivityDefinition[]>([])
 
   useEffect(() => {
     getActivityDefs().then(setActivityDefs)
   }, [])
-
-  const isKshetraAdmin = kshetraAdminState ?? user?.isKshetraAdmin ?? false
-
-  async function handleToggleKshetraAdmin() {
-    if (!user) return
-    setToggling(true)
-    setToggleError(null)
-    try {
-      const token = await auth.currentUser?.getIdToken()
-      const res = await fetch('/api/admin/set-kshetra-admin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token ?? ''}`,
-        },
-        body: JSON.stringify({ uid, isKshetraAdmin: !isKshetraAdmin }),
-      })
-      if (!res.ok) throw new Error((await res.json()).error ?? 'Request failed')
-      setKshetraAdminState(!isKshetraAdmin)
-    } catch (e) {
-      setToggleError(e instanceof Error ? e.message : 'Failed to update')
-    } finally {
-      setToggling(false)
-    }
-  }
 
   const log: ActivityStats = period === 'month' ? monthlyLog : lifetimeLog
   const totalDays = period === 'month' ? monthlyDays : lifetimeDays
@@ -83,28 +52,12 @@ export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
                 {user.isAdmin && (
                   <span className="text-xs bg-orange-600 text-white px-2 py-0.5 rounded-full font-medium">Admin</span>
                 )}
-                {isKshetraAdmin && !user.isAdmin && (
+                {user.isKshetraAdmin && !user.isAdmin && (
                   <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium">Kshetra Admin</span>
                 )}
               </div>
             </div>
-            {viewer?.isAdmin && !user.isAdmin && (
-              <button
-                onClick={handleToggleKshetraAdmin}
-                disabled={toggling}
-                className={`shrink-0 text-xs px-3 py-1.5 rounded-xl font-semibold transition-colors ${
-                  isKshetraAdmin
-                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                    : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                } disabled:opacity-50`}
-              >
-                {toggling ? '...' : isKshetraAdmin ? 'Remove Kshetra Admin' : 'Make Kshetra Admin'}
-              </button>
-            )}
           </div>
-          {toggleError && (
-            <p className="mt-2 text-xs text-red-500 text-right">{toggleError}</p>
-          )}
           <div className="grid grid-cols-3 mt-4 pt-4 border-t border-orange-50">
             <div className="text-center">
               <p className="text-lg font-bold text-orange-900">{user.rajipo.toLocaleString()}</p>

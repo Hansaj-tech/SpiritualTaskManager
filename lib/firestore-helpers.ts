@@ -188,11 +188,6 @@ export async function saveReminder(uid: string, pref: ReminderPref): Promise<voi
   await setDoc(ref, pref)
 }
 
-export async function setKshetraAdmin(uid: string, isKshetraAdmin: boolean): Promise<void> {
-  const ref = doc(db, 'users', uid)
-  await updateDoc(ref, { isKshetraAdmin, updatedAt: serverTimestamp() })
-}
-
 export async function updateUserKshetra(uid: string, kshetra: string): Promise<void> {
   const ref = doc(db, 'users', uid)
   await setDoc(ref, { kshetra, updatedAt: serverTimestamp() }, { merge: true })
