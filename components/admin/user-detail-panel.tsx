@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAdminUserDetail } from '@/hooks/use-admin'
-import { getAuth } from 'firebase/auth'
 import { useAuth } from '@/contexts/auth-context'
-import { DEFAULT_ACTIVITIES, ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
+import { auth } from '@/lib/firebase'
+import { getActivityDefs } from '@/lib/firestore-helpers'
+import { ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
 import type { AdminUser, ActivityStats } from '@/hooks/use-admin'
+import type { ActivityDefinition } from '@/types'
 
 interface UserDetailPanelProps {
   uid: string
@@ -20,14 +22,21 @@ export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
   const [period, setPeriod] = useState<Period>('month')
   const [kshetraAdminState, setKshetraAdminState] = useState<boolean | undefined>(undefined)
   const [toggling, setToggling] = useState(false)
+  const [toggleError, setToggleError] = useState<string | null>(null)
+  const [activityDefs, setActivityDefs] = useState<ActivityDefinition[]>([])
+
+  useEffect(() => {
+    getActivityDefs().then(setActivityDefs)
+  }, [])
 
   const isKshetraAdmin = kshetraAdminState ?? user?.isKshetraAdmin ?? false
 
   async function handleToggleKshetraAdmin() {
     if (!user) return
     setToggling(true)
+    setToggleError(null)
     try {
-      const token = await getAuth().currentUser?.getIdToken()
+      const token = await auth.currentUser?.getIdToken()
       const res = await fetch('/api/admin/set-kshetra-admin', {
         method: 'POST',
         headers: {
@@ -39,7 +48,7 @@ export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
       if (!res.ok) throw new Error((await res.json()).error ?? 'Request failed')
       setKshetraAdminState(!isKshetraAdmin)
     } catch (e) {
-      console.error('Failed to update kshetra admin status:', e)
+      setToggleError(e instanceof Error ? e.message : 'Failed to update')
     } finally {
       setToggling(false)
     }
@@ -48,6 +57,10 @@ export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
   const log: ActivityStats = period === 'month' ? monthlyLog : lifetimeLog
   const totalDays = period === 'month' ? monthlyDays : lifetimeDays
   const periodLabel = period === 'month' ? 'This Month' : 'All Time'
+
+  function defName(id: string): string {
+    return activityDefs.find(d => d.id === id)?.name ?? id
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -89,6 +102,9 @@ export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
               </button>
             )}
           </div>
+          {toggleError && (
+            <p className="mt-2 text-xs text-red-500 text-right">{toggleError}</p>
+          )}
           <div className="grid grid-cols-3 mt-4 pt-4 border-t border-orange-50">
             <div className="text-center">
               <p className="text-lg font-bold text-orange-900">{user.rajipo.toLocaleString()}</p>
@@ -172,13 +188,12 @@ export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
         ) : (
           <>
             {ACTIVITY_IDS.map((id) => {
-              const def = DEFAULT_ACTIVITIES[id]
               const stats = log[id] ?? { done: 0, total: totalDays }
               const pct = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0
               return (
                 <div key={id} className="px-4 py-3 border-b border-orange-50">
                   <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-sm text-orange-900 font-medium">{def.name}</span>
+                    <span className="text-sm text-orange-900 font-medium">{defName(id)}</span>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-orange-600">{pct}%</span>
                       <span className="text-xs text-orange-400">{stats.done}/{stats.total}</span>
@@ -202,13 +217,12 @@ export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
             </div>
 
             {BONUS_ACTIVITY_IDS.map((id, i) => {
-              const def = DEFAULT_ACTIVITIES[id]
               const stats = log[id] ?? { done: 0, total: totalDays }
               const pct = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0
               return (
                 <div key={id} className={`px-4 py-3 ${i < BONUS_ACTIVITY_IDS.length - 1 ? 'border-b border-orange-50' : ''}`}>
                   <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-sm text-orange-900 font-medium">{def.name}</span>
+                    <span className="text-sm text-orange-900 font-medium">{defName(id)}</span>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-orange-600">{pct}%</span>
                       <span className="text-xs text-orange-400">{stats.done}/{stats.total}</span>
