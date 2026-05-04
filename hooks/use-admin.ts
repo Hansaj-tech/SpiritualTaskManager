@@ -14,16 +14,21 @@ export type AdminUser = Omit<UserProfile, 'fcmTokens'>
 export type ActivityStats = Record<ActivityId, { done: number; total: number }>
 
 export function useAdminUsers() {
-  const { user } = useAuth()
+  const { user, userProfile } = useAuth()
   const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!user) return
+    if (!user || !userProfile) return
     let cancelled = false
 
-    getDocs(collection(db, 'users'))
+    const isKshetraOnly = userProfile.isKshetraAdmin && !userProfile.isAdmin
+    const q = isKshetraOnly && userProfile.kshetra
+      ? query(collection(db, 'users'), where('kshetra', '==', userProfile.kshetra))
+      : collection(db, 'users')
+
+    getDocs(q)
       .then((snap) => {
         if (cancelled) return
         const list: AdminUser[] = snap.docs.map((d) => {
@@ -42,7 +47,7 @@ export function useAdminUsers() {
       })
 
     return () => { cancelled = true }
-  }, [user])
+  }, [user, userProfile])
 
   return { users, loading, error }
 }

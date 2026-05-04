@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
     if (!callerData) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
     const isAdmin = callerData.isAdmin === true
+    const isKshetraAdmin = callerData.isKshetraAdmin === true
 
     if (isAdmin) {
       const usersSnap = await adminDb().collection('users').limit(500).get()
@@ -68,6 +69,15 @@ export async function GET(request: NextRequest) {
       }
 
       return NextResponse.json({ isAdmin: true, monthly, lifetime })
+    } else if (isKshetraAdmin && callerData.kshetra) {
+      const kshetra = callerData.kshetra as string
+      const usersSnap = await adminDb().collection('users').where('kshetra', '==', kshetra).get()
+      const entries = usersSnap.docs.map((doc) => buildEntry(doc.id, doc.data(), decoded.uid))
+      return NextResponse.json({
+        isAdmin: true,
+        monthly: { [kshetra]: ranked(entries, 'monthlyRajipo') },
+        lifetime: { [kshetra]: ranked(entries, 'rajipo') },
+      })
     } else {
       const kshetra = callerData.kshetra as string | null
       if (!kshetra) {

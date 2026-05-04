@@ -101,6 +101,17 @@ export function useLeaderboard() {
           }
 
           if (!cancelled) setData({ isAdmin: true, monthly, lifetime })
+        } else if (userProfile!.isKshetraAdmin && userProfile!.kshetra) {
+          const kshetra = userProfile!.kshetra
+          const snap = await getDocs(query(collection(db, 'users'), where('kshetra', '==', kshetra)))
+          const entries = snap.docs.map((doc) => toEntry(doc.id, doc.data(), user!.uid))
+          const monthly: Record<string, LeaderboardEntry[]> = {
+            [kshetra]: [...entries].sort((a, b) => b.monthlyRajipo - a.monthlyRajipo).map((e, i) => ({ ...e, rank: i + 1 })),
+          }
+          const lifetime: Record<string, LeaderboardEntry[]> = {
+            [kshetra]: [...entries].sort((a, b) => b.rajipo - a.rajipo).map((e, i) => ({ ...e, rank: i + 1 })),
+          }
+          if (!cancelled) setData({ isAdmin: true, monthly, lifetime })
         } else {
           const kshetra = userProfile!.kshetra
           if (!kshetra) {

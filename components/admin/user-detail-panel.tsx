@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useAdminUserDetail } from '@/hooks/use-admin'
+import { useAuth } from '@/contexts/auth-context'
+import { setKshetraAdmin } from '@/lib/firestore-helpers'
 import { DEFAULT_ACTIVITIES, ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
 import type { AdminUser, ActivityStats } from '@/hooks/use-admin'
 
@@ -13,8 +15,24 @@ interface UserDetailPanelProps {
 type Period = 'month' | 'lifetime'
 
 export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
+  const { userProfile: viewer } = useAuth()
   const { monthlyLog, lifetimeLog, monthlyDays, lifetimeDays, loading, error } = useAdminUserDetail(uid)
   const [period, setPeriod] = useState<Period>('month')
+  const [kshetraAdminState, setKshetraAdminState] = useState<boolean | undefined>(undefined)
+  const [toggling, setToggling] = useState(false)
+
+  const isKshetraAdmin = kshetraAdminState ?? user?.isKshetraAdmin ?? false
+
+  async function handleToggleKshetraAdmin() {
+    if (!user) return
+    setToggling(true)
+    try {
+      await setKshetraAdmin(uid, !isKshetraAdmin)
+      setKshetraAdminState(!isKshetraAdmin)
+    } finally {
+      setToggling(false)
+    }
+  }
 
   const log: ActivityStats = period === 'month' ? monthlyLog : lifetimeLog
   const totalDays = period === 'month' ? monthlyDays : lifetimeDays
@@ -34,13 +52,31 @@ export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
                 {(user.displayName || 'U')[0].toUpperCase()}
               </div>
             )}
-            <div>
+            <div className="flex-1 min-w-0">
               <p className="font-semibold text-orange-900">{user.displayName}</p>
               <p className="text-sm text-orange-400">{user.email}</p>
-              {user.isAdmin && (
-                <span className="text-xs bg-orange-600 text-white px-2 py-0.5 rounded-full font-medium">Admin</span>
-              )}
+              <div className="flex flex-wrap gap-1 mt-1">
+                {user.isAdmin && (
+                  <span className="text-xs bg-orange-600 text-white px-2 py-0.5 rounded-full font-medium">Admin</span>
+                )}
+                {isKshetraAdmin && !user.isAdmin && (
+                  <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium">Kshetra Admin</span>
+                )}
+              </div>
             </div>
+            {viewer?.isAdmin && !user.isAdmin && (
+              <button
+                onClick={handleToggleKshetraAdmin}
+                disabled={toggling}
+                className={`shrink-0 text-xs px-3 py-1.5 rounded-xl font-semibold transition-colors ${
+                  isKshetraAdmin
+                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                    : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                } disabled:opacity-50`}
+              >
+                {toggling ? '...' : isKshetraAdmin ? 'Remove K-Admin' : 'Make K-Admin'}
+              </button>
+            )}
           </div>
           <div className="grid grid-cols-3 mt-4 pt-4 border-t border-orange-50">
             <div className="text-center">

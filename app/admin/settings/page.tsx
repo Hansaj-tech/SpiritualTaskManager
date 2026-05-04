@@ -1,25 +1,33 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import * as Tabs from '@radix-ui/react-tabs'
 import { PointsEditor } from '@/components/admin/points-editor'
 import { QuoteEditor } from '@/components/admin/quote-editor'
 import { ImagesEditor } from '@/components/admin/images-editor'
 import { getActivityDefs, getAppConfig } from '@/lib/firestore-helpers'
+import { useAuth } from '@/contexts/auth-context'
 import type { ActivityDefinition, AppConfig } from '@/types'
 
 export default function AdminSettingsPage() {
+  const { userProfile } = useAuth()
+  const router = useRouter()
   const [activityDefs, setActivityDefs] = useState<ActivityDefinition[]>([])
   const [appConfig, setAppConfig] = useState<AppConfig>({ dailyQuote: '', guruImages: [] })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (userProfile && !userProfile.isAdmin) {
+      router.replace('/admin')
+      return
+    }
     Promise.all([getActivityDefs(), getAppConfig()]).then(([defs, config]) => {
       setActivityDefs(defs)
       setAppConfig(config)
       setLoading(false)
     })
-  }, [])
+  }, [userProfile, router])
 
   if (loading) {
     return (

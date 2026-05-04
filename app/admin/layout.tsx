@@ -24,7 +24,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     )
   }
 
-  if (!userProfile?.isAdmin) {
+  const hasAccess = userProfile?.isAdmin || userProfile?.isKshetraAdmin
+
+  if (!hasAccess) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-orange-50 gap-4 px-6">
         <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center mb-2">
@@ -54,7 +56,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <span className="font-bold text-orange-900">Admin Panel</span>
+            <span className="font-bold text-orange-900">
+              {userProfile?.isKshetraAdmin && !userProfile?.isAdmin
+                ? `${userProfile.kshetra ?? ''} Admin`
+                : 'Admin Panel'}
+            </span>
           </div>
 
           <nav className="flex items-center gap-1">
@@ -65,13 +71,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <Users className="w-4 h-4" />
               Users
             </Link>
-            <Link
-              href="/admin/settings"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium text-orange-700 hover:bg-orange-50 transition-colors"
-            >
-              <Settings className="w-4 h-4" />
-              Settings
-            </Link>
+            {userProfile?.isAdmin && (
+              <Link
+                href="/admin/settings"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium text-orange-700 hover:bg-orange-50 transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                Settings
+              </Link>
+            )}
           </nav>
         </div>
       </header>

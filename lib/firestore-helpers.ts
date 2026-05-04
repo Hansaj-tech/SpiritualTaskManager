@@ -24,6 +24,7 @@ export function docToUserProfile(uid: string, data: DocumentData): UserProfile {
     photoURL: data.photoURL ?? null,
     kshetra: data.kshetra ?? null,
     isAdmin: data.isAdmin ?? false,
+    isKshetraAdmin: data.isKshetraAdmin ?? false,
     rajipo: data.rajipo ?? 0,
     monthlyRajipo: data.monthlyRajipo ?? 0,
     monthlyRajipoMonth: data.monthlyRajipoMonth ?? '',
@@ -71,6 +72,7 @@ export async function getOrCreateUserProfile(
     photoURL: defaults.photoURL,
     kshetra: null,
     isAdmin: false,
+    isKshetraAdmin: false,
     rajipo: 0,
     monthlyRajipo: 0,
     monthlyRajipoMonth: '',
@@ -184,6 +186,11 @@ export async function getAppConfig(): Promise<AppConfig> {
 export async function saveReminder(uid: string, pref: ReminderPref): Promise<void> {
   const ref = doc(db, 'users', uid, 'reminders', pref.activityId)
   await setDoc(ref, pref)
+}
+
+export async function setKshetraAdmin(uid: string, isKshetraAdmin: boolean): Promise<void> {
+  const ref = doc(db, 'users', uid)
+  await updateDoc(ref, { isKshetraAdmin, updatedAt: serverTimestamp() })
 }
 
 export async function updateUserKshetra(uid: string, kshetra: string): Promise<void> {

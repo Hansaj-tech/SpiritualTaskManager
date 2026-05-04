@@ -22,11 +22,20 @@ export async function GET(request: NextRequest) {
 
     const decoded = await adminAuth().verifyIdToken(idToken)
     const callerSnap = await adminDb().collection('users').doc(decoded.uid).get()
-    if (!callerSnap.data()?.isAdmin) {
+    const callerData = callerSnap.data()
+    const isAdmin = callerData?.isAdmin === true
+    const isKshetraAdmin = callerData?.isKshetraAdmin === true
+
+    if (!isAdmin && !isKshetraAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const usersSnap = await adminDb().collection('users').limit(500).get()
+    let usersQuery = adminDb().collection('users').limit(500)
+    if (isKshetraAdmin && !isAdmin) {
+      const kshetra = callerData?.kshetra as string | undefined
+      if (kshetra) usersQuery = usersQuery.where('kshetra', '==', kshetra) as typeof usersQuery
+    }
+    const usersSnap = await usersQuery.get()
 
     const users = usersSnap.docs.map((doc) => {
       const data = doc.data()
@@ -37,6 +46,7 @@ export async function GET(request: NextRequest) {
         photoURL: data.photoURL ?? null,
         kshetra: data.kshetra ?? null,
         isAdmin: data.isAdmin ?? false,
+        isKshetraAdmin: data.isKshetraAdmin ?? false,
         rajipo: data.rajipo ?? 0,
         streak: data.streak ?? 0,
         longestStreak: data.longestStreak ?? 0,

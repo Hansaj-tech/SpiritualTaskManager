@@ -43,6 +43,7 @@ export interface UserProfile {
   photoURL: string | null
   kshetra: string | null
   isAdmin: boolean
+  isKshetraAdmin: boolean
   rajipo: number
   monthlyRajipo: number
   monthlyRajipoMonth: string
