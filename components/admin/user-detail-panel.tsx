@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useAdminUserDetail } from '@/hooks/use-admin'
+import { getAuth } from 'firebase/auth'
 import { useAuth } from '@/contexts/auth-context'
-import { setKshetraAdmin } from '@/lib/firestore-helpers'
 import { DEFAULT_ACTIVITIES, ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
 import type { AdminUser, ActivityStats } from '@/hooks/use-admin'
 
@@ -27,8 +27,19 @@ export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
     if (!user) return
     setToggling(true)
     try {
-      await setKshetraAdmin(uid, !isKshetraAdmin)
+      const token = await getAuth().currentUser?.getIdToken()
+      const res = await fetch('/api/admin/set-kshetra-admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token ?? ''}`,
+        },
+        body: JSON.stringify({ uid, isKshetraAdmin: !isKshetraAdmin }),
+      })
+      if (!res.ok) throw new Error((await res.json()).error ?? 'Request failed')
       setKshetraAdminState(!isKshetraAdmin)
+    } catch (e) {
+      console.error('Failed to update kshetra admin status:', e)
     } finally {
       setToggling(false)
     }
@@ -74,7 +85,7 @@ export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
                     : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
                 } disabled:opacity-50`}
               >
-                {toggling ? '...' : isKshetraAdmin ? 'Remove K-Admin' : 'Make K-Admin'}
+                {toggling ? '...' : isKshetraAdmin ? 'Remove Kshetra Admin' : 'Make Kshetra Admin'}
               </button>
             )}
           </div>
