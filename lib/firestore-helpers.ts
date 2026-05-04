@@ -123,8 +123,18 @@ export async function saveActivityToggle(
   let lastCompletedDate: string | null = userProfile.lastCompletedDate
 
   if (!allCompleted) {
-    // Main activities not all done — preserve existing streak unchanged
-    streak = userProfile.streak
+    if (userProfile.lastCompletedDate === dateKey) {
+      // User completed all 10 earlier today but has now unchecked one — revert streak
+      const logsRef2 = collection(db, 'users', uid, 'activityLogs')
+      const recentSnap = await getDocs(query(logsRef2, orderBy('date', 'desc'), limit(60)))
+      const histCompleted = recentSnap.docs
+        .filter(d => d.data().allCompleted === true && d.data().date !== dateKey)
+        .map(d => d.data().date as string)
+      streak = computeActivityStreak(histCompleted, dateKey)
+      lastCompletedDate = histCompleted.length > 0 ? histCompleted[0] : null
+    } else {
+      streak = userProfile.streak
+    }
   } else if (userProfile.lastCompletedDate === dateKey) {
     // Already recorded a completion for today — no change
     streak = userProfile.streak
