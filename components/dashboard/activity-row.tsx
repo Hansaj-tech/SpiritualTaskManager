@@ -69,7 +69,7 @@ export function ActivityRow({
           )}
         </div>
 
-        {/* Today's Vanchan toggle — only shown when text is available */}
+        {/* This Week's Vanchan toggle — only shown when text is available */}
         {hasVanchan && (
           <button
             onClick={() => setExpanded((v) => !v)}
@@ -79,7 +79,7 @@ export function ActivityRow({
                 ? 'bg-orange-500 text-white'
                 : 'bg-orange-100 dark:bg-stone-700 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-stone-600'
             )}
-            title="Today's Vanchan"
+            title="This Week's Vanchan"
           >
             <BookOpen className="w-3 h-3" />
             <span className="hidden xs:inline">Vanchan</span>
@@ -124,7 +124,7 @@ export function ActivityRow({
             <div className="flex items-center gap-1.5 mb-2">
               <BookOpen className="w-3.5 h-3.5 text-orange-500" />
               <span className="text-xs font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wide">
-                Today&apos;s Vanchan
+                This Week&apos;s Vanchan
               </span>
             </div>
             <p className="text-sm text-orange-900 dark:text-orange-100 leading-relaxed whitespace-pre-wrap">

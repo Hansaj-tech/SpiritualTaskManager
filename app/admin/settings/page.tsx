@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import * as Tabs from '@radix-ui/react-tabs'
 import { PointsEditor } from '@/components/admin/points-editor'
-import { QuoteEditor } from '@/components/admin/quote-editor'
 import { ImagesEditor } from '@/components/admin/images-editor'
 import { VanchanEditor } from '@/components/admin/vanchan-editor'
 import { MotivationsEditor } from '@/components/admin/motivations-editor'
@@ -39,7 +38,7 @@ export default function AdminSettingsPage() {
     )
   }
 
-  const tabs = ['points', 'quote', 'motivations', 'vanchan', 'images'] as const
+  const tabs = ['points', 'motivations', 'vanchan', 'images'] as const
 
   return (
     <div className="flex flex-col gap-4">
@@ -54,7 +53,6 @@ export default function AdminSettingsPage() {
               className="flex-1 h-8 rounded-lg text-sm font-medium text-orange-700 capitalize whitespace-nowrap transition-all data-[state=active]:bg-white data-[state=active]:text-orange-900 data-[state=active]:shadow-sm px-3"
             >
               {tab === 'points' ? 'Points'
-                : tab === 'quote' ? 'Quote'
                 : tab === 'motivations' ? 'Motivations'
                 : tab === 'vanchan' ? 'Vanchan'
                 : 'Images'}
@@ -66,10 +64,6 @@ export default function AdminSettingsPage() {
           <PointsEditor activityDefs={activityDefs} />
         </Tabs.Content>
 
-        <Tabs.Content value="quote">
-          <QuoteEditor initialQuote={appConfig.dailyQuote} />
-        </Tabs.Content>
-
         <Tabs.Content value="motivations">
           <MotivationsEditor
             initialMotivations={appConfig.motivations}
@@ -78,7 +72,7 @@ export default function AdminSettingsPage() {
         </Tabs.Content>
 
         <Tabs.Content value="vanchan">
-          <VanchanEditor initialVanchan={appConfig.todaysVanchan} />
+          <VanchanEditor initialVanchan={appConfig.thisWeeksVanchan} />
         </Tabs.Content>
 
         <Tabs.Content value="images">

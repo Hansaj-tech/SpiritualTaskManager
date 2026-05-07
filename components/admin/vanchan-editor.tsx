@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { updateTodaysVanchan } from '@/lib/firestore-helpers'
-import type { TodaysVanchan } from '@/types'
+import { updateThisWeeksVanchan } from '@/lib/firestore-helpers'
+import type { ThisWeeksVanchan } from '@/types'
 
 interface VanchanEditorProps {
-  initialVanchan?: TodaysVanchan
+  initialVanchan?: ThisWeeksVanchan
 }
 
 export function VanchanEditor({ initialVanchan }: VanchanEditorProps) {
@@ -16,7 +16,7 @@ export function VanchanEditor({ initialVanchan }: VanchanEditorProps) {
 
   async function handleSave() {
     setSaving(true)
-    await updateTodaysVanchan({ vachnamrut: vachnamrut.trim(), swaminiVato: swaminiVato.trim() })
+    await updateThisWeeksVanchan({ vachnamrut: vachnamrut.trim(), swaminiVato: swaminiVato.trim() })
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -33,7 +33,7 @@ export function VanchanEditor({ initialVanchan }: VanchanEditorProps) {
             value={vachnamrut}
             onChange={(e) => setVachnamrut(e.target.value)}
             rows={5}
-            placeholder="Enter today's Vachanamrut passage..."
+            placeholder="Enter this week's Vachanamrut passage..."
             className="w-full px-3 py-2 rounded-xl border-2 border-orange-200 text-orange-900 text-sm resize-none focus:outline-none focus:border-orange-600"
           />
         </div>
@@ -46,7 +46,7 @@ export function VanchanEditor({ initialVanchan }: VanchanEditorProps) {
             value={swaminiVato}
             onChange={(e) => setSwaminiVato(e.target.value)}
             rows={5}
-            placeholder="Enter today's Swamini Vato passage..."
+            placeholder="Enter this week's Swamini Vato passage..."
             className="w-full px-3 py-2 rounded-xl border-2 border-orange-200 text-orange-900 text-sm resize-none focus:outline-none focus:border-orange-600"
           />
         </div>
@@ -61,7 +61,7 @@ export function VanchanEditor({ initialVanchan }: VanchanEditorProps) {
         disabled={saving}
         className="w-full h-11 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-60"
       >
-        {saved ? 'Saved!' : saving ? 'Saving…' : 'Update Today\'s Vanchan'}
+        {saved ? 'Saved!' : saving ? 'Saving…' : "Update This Week's Vanchan"}
       </button>
     </div>
   )

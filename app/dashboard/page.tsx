@@ -174,9 +174,9 @@ export default function DashboardPage() {
                 onReminderOpen={() => setOpenReminderId(activity.id)}
                 vanchanText={
                   activity.id === 'vachnamrut-vanchan'
-                    ? appConfig.todaysVanchan?.vachnamrut
+                    ? appConfig.thisWeeksVanchan?.vachnamrut
                     : activity.id === 'swamini-vato-vanchan'
-                    ? appConfig.todaysVanchan?.swaminiVato
+                    ? appConfig.thisWeeksVanchan?.swaminiVato
                     : undefined
                 }
               />

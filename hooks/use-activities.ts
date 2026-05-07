@@ -67,7 +67,7 @@ export function useActivities(): ActivityState {
         setAppConfig({
           dailyQuote: data.dailyQuote ?? '',
           guruImages: data.guruImages ?? [],
-          todaysVanchan: data.todaysVanchan ?? undefined,
+          thisWeeksVanchan: data.thisWeeksVanchan ?? undefined,
           motivations: data.motivations ?? undefined,
           motivationDurationHours: data.motivationDurationHours ?? undefined,
         })
