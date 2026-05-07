@@ -7,7 +7,7 @@ import {
 import { db } from '@/lib/firebase'
 import { todayKey } from '@/lib/date-utils'
 import { DEFAULT_ACTIVITIES, ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
-import type { UserProfile, DayLog, AppConfig, ActivityDefinition, ActivityId, ReminderPref } from '@/types'
+import type { UserProfile, DayLog, AppConfig, ActivityDefinition, ActivityId, ReminderPref, TodaysVanchan } from '@/types'
 
 function toDate(val: unknown): Date | null {
   if (!val) return null
@@ -178,6 +178,9 @@ export async function getAppConfig(): Promise<AppConfig> {
   return {
     dailyQuote: data.dailyQuote ?? '',
     guruImages: data.guruImages ?? [],
+    todaysVanchan: data.todaysVanchan ?? undefined,
+    motivations: data.motivations ?? undefined,
+    motivationDurationHours: data.motivationDurationHours ?? undefined,
     updatedAt: toDate(data.updatedAt) ?? undefined,
     updatedBy: data.updatedBy,
   }
@@ -273,6 +276,18 @@ export async function updateActivities(
 export async function updateDailyQuote(quote: string): Promise<void> {
   const ref = doc(db, 'config', 'app')
   await setDoc(ref, { dailyQuote: quote, updatedAt: serverTimestamp() }, { merge: true })
+}
+
+export async function updateTodaysVanchan(vanchan: Partial<TodaysVanchan>): Promise<void> {
+  const ref = doc(db, 'config', 'app')
+  const snap = await getDoc(ref)
+  const existing = snap.exists() ? (snap.data().todaysVanchan ?? {}) : {}
+  await setDoc(ref, { todaysVanchan: { ...existing, ...vanchan }, updatedAt: serverTimestamp() }, { merge: true })
+}
+
+export async function updateMotivations(motivations: string[], durationHours: number): Promise<void> {
+  const ref = doc(db, 'config', 'app')
+  await setDoc(ref, { motivations, motivationDurationHours: durationHours, updatedAt: serverTimestamp() }, { merge: true })
 }
 
 export async function updateGuruImages(images: string[]): Promise<void> {

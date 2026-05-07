@@ -61,9 +61,17 @@ export interface ReminderPref {
   time: string
 }
 
+export interface TodaysVanchan {
+  vachnamrut: string
+  swaminiVato: string
+}
+
 export interface AppConfig {
   dailyQuote: string
   guruImages: string[]
+  todaysVanchan?: TodaysVanchan
+  motivations?: string[]
+  motivationDurationHours?: number
   updatedAt?: Date
   updatedBy?: string
 }

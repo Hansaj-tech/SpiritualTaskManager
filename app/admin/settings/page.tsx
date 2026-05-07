@@ -6,6 +6,8 @@ import * as Tabs from '@radix-ui/react-tabs'
 import { PointsEditor } from '@/components/admin/points-editor'
 import { QuoteEditor } from '@/components/admin/quote-editor'
 import { ImagesEditor } from '@/components/admin/images-editor'
+import { VanchanEditor } from '@/components/admin/vanchan-editor'
+import { MotivationsEditor } from '@/components/admin/motivations-editor'
 import { getActivityDefs, getAppConfig } from '@/lib/firestore-helpers'
 import { useAuth } from '@/contexts/auth-context'
 import type { ActivityDefinition, AppConfig } from '@/types'
@@ -37,19 +39,25 @@ export default function AdminSettingsPage() {
     )
   }
 
+  const tabs = ['points', 'quote', 'motivations', 'vanchan', 'images'] as const
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-lg font-semibold text-orange-900">Settings</h1>
 
       <Tabs.Root defaultValue="points">
-        <Tabs.List className="flex gap-1 bg-orange-100 rounded-xl p-1 mb-4">
-          {(['points', 'quote', 'images'] as const).map((tab) => (
+        <Tabs.List className="flex gap-1 bg-orange-100 rounded-xl p-1 mb-4 overflow-x-auto">
+          {tabs.map((tab) => (
             <Tabs.Trigger
               key={tab}
               value={tab}
-              className="flex-1 h-8 rounded-lg text-sm font-medium text-orange-700 capitalize transition-all data-[state=active]:bg-white data-[state=active]:text-orange-900 data-[state=active]:shadow-sm"
+              className="flex-1 h-8 rounded-lg text-sm font-medium text-orange-700 capitalize whitespace-nowrap transition-all data-[state=active]:bg-white data-[state=active]:text-orange-900 data-[state=active]:shadow-sm px-3"
             >
-              {tab === 'points' ? 'Points' : tab === 'quote' ? 'Quote' : 'Images'}
+              {tab === 'points' ? 'Points'
+                : tab === 'quote' ? 'Quote'
+                : tab === 'motivations' ? 'Motivations'
+                : tab === 'vanchan' ? 'Vanchan'
+                : 'Images'}
             </Tabs.Trigger>
           ))}
         </Tabs.List>
@@ -60,6 +68,17 @@ export default function AdminSettingsPage() {
 
         <Tabs.Content value="quote">
           <QuoteEditor initialQuote={appConfig.dailyQuote} />
+        </Tabs.Content>
+
+        <Tabs.Content value="motivations">
+          <MotivationsEditor
+            initialMotivations={appConfig.motivations}
+            initialDurationHours={appConfig.motivationDurationHours}
+          />
+        </Tabs.Content>
+
+        <Tabs.Content value="vanchan">
+          <VanchanEditor initialVanchan={appConfig.todaysVanchan} />
         </Tabs.Content>
 
         <Tabs.Content value="images">

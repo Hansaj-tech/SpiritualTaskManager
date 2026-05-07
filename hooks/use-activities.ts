@@ -58,7 +58,7 @@ export function useActivities(): ActivityState {
     })
   }, [])
 
-  // Real-time listener for app config (guru images, daily quote)
+  // Real-time listener for app config (guru images, daily quote, vanchan, motivations)
   useEffect(() => {
     const configRef = doc(db, 'config', 'app')
     return onSnapshot(configRef, (snap) => {
@@ -67,6 +67,9 @@ export function useActivities(): ActivityState {
         setAppConfig({
           dailyQuote: data.dailyQuote ?? '',
           guruImages: data.guruImages ?? [],
+          todaysVanchan: data.todaysVanchan ?? undefined,
+          motivations: data.motivations ?? undefined,
+          motivationDurationHours: data.motivationDurationHours ?? undefined,
         })
       }
     })

@@ -145,9 +145,13 @@ export default function DashboardPage() {
         {/* Progress bar */}
         <ProgressBar completed={completedCount} total={mainActivityDefs.length} />
 
-        {/* Daily quote */}
-        {appConfig.dailyQuote && (
-          <DailyQuote quote={appConfig.dailyQuote} />
+        {/* Daily quote / rotating motivation */}
+        {(appConfig.dailyQuote || (appConfig.motivations && appConfig.motivations.length > 0)) && (
+          <DailyQuote
+            quote={appConfig.dailyQuote}
+            motivations={appConfig.motivations}
+            motivationDurationHours={appConfig.motivationDurationHours}
+          />
         )}
 
         {/* Activity list */}
@@ -168,6 +172,13 @@ export default function DashboardPage() {
                 reminder={reminders[activity.id]}
                 onToggle={(done) => toggleActivity(activity.id, done)}
                 onReminderOpen={() => setOpenReminderId(activity.id)}
+                vanchanText={
+                  activity.id === 'vachnamrut-vanchan'
+                    ? appConfig.todaysVanchan?.vachnamrut
+                    : activity.id === 'swamini-vato-vanchan'
+                    ? appConfig.todaysVanchan?.swaminiVato
+                    : undefined
+                }
               />
             ))}
           </div>
