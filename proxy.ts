@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function proxy(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const uid = request.cookies.get('aahanik-uid')?.value
   const onboarded = request.cookies.get('aahanik-onboarded')?.value
