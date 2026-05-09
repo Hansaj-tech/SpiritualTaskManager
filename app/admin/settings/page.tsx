@@ -7,6 +7,7 @@ import { PointsEditor } from '@/components/admin/points-editor'
 import { ImagesEditor } from '@/components/admin/images-editor'
 import { VanchanEditor } from '@/components/admin/vanchan-editor'
 import { MotivationsEditor } from '@/components/admin/motivations-editor'
+import { YouTubeLinksEditor } from '@/components/admin/youtube-links-editor'
 import { getActivityDefs, getAppConfig } from '@/lib/firestore-helpers'
 import { useAuth } from '@/contexts/auth-context'
 import type { ActivityDefinition, AppConfig } from '@/types'
@@ -38,7 +39,7 @@ export default function AdminSettingsPage() {
     )
   }
 
-  const tabs = ['points', 'motivations', 'vanchan', 'images'] as const
+  const tabs = ['points', 'motivations', 'vanchan', 'images', 'links'] as const
 
   return (
     <div className="flex flex-col gap-4">
@@ -55,7 +56,8 @@ export default function AdminSettingsPage() {
               {tab === 'points' ? 'Points'
                 : tab === 'motivations' ? 'Motivations'
                 : tab === 'vanchan' ? 'Vanchan'
-                : 'Images'}
+                : tab === 'images' ? 'Images'
+                : 'Links'}
             </Tabs.Trigger>
           ))}
         </Tabs.List>
@@ -77,6 +79,13 @@ export default function AdminSettingsPage() {
 
         <Tabs.Content value="images">
           <ImagesEditor initialImages={appConfig.guruImages} />
+        </Tabs.Content>
+
+        <Tabs.Content value="links">
+          <YouTubeLinksEditor
+            activityDefs={activityDefs}
+            initialLinks={appConfig.activityYoutubeLinks}
+          />
         </Tabs.Content>
       </Tabs.Root>
     </div>

@@ -179,6 +179,11 @@ export default function DashboardPage() {
                     ? appConfig.thisWeeksVanchan?.swaminiVato
                     : undefined
                 }
+                youtubeLink={
+                  activity.id !== 'vachnamrut-vanchan' && activity.id !== 'swamini-vato-vanchan'
+                    ? appConfig.activityYoutubeLinks?.[activity.id]
+                    : undefined
+                }
               />
             ))}
           </div>
@@ -205,6 +210,7 @@ export default function DashboardPage() {
                 reminder={reminders[activity.id]}
                 onToggle={(done) => toggleActivity(activity.id, done)}
                 onReminderOpen={() => setOpenReminderId(activity.id)}
+                youtubeLink={appConfig.activityYoutubeLinks?.[activity.id]}
               />
             ))}
           </div>

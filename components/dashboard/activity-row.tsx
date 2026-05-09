@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import * as Checkbox from '@radix-ui/react-checkbox'
-import { Check, Bell, BellOff, ChevronDown, ChevronUp, BookOpen } from 'lucide-react'
+import { Check, Bell, BellOff, ChevronDown, ChevronUp, BookOpen, PlayCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ActivityDefinition, ActivityLogEntry, ReminderPref } from '@/types'
 
@@ -15,6 +15,7 @@ interface ActivityRowProps {
   onReminderOpen: () => void
   disabled?: boolean
   vanchanText?: string
+  youtubeLink?: string
 }
 
 export function ActivityRow({
@@ -26,10 +27,12 @@ export function ActivityRow({
   onReminderOpen,
   disabled = false,
   vanchanText,
+  youtubeLink,
 }: ActivityRowProps) {
   const done = logEntry?.done ?? false
   const [expanded, setExpanded] = useState(false)
   const hasVanchan = !!vanchanText
+  const hasYoutubeLink = !!youtubeLink
 
   return (
     <div className={cn(done && 'bg-orange-50/60 dark:bg-stone-800/60', disabled && 'opacity-50 cursor-not-allowed')}>
@@ -85,6 +88,20 @@ export function ActivityRow({
             <span className="hidden xs:inline">Vanchan</span>
             {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
+        )}
+
+        {/* YouTube play button */}
+        {hasYoutubeLink && (
+          <a
+            href={youtubeLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-medium transition-all flex-shrink-0 bg-orange-100 dark:bg-stone-700 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-stone-600"
+            title="Watch on YouTube"
+          >
+            <PlayCircle className="w-3 h-3" />
+            <span className="hidden xs:inline">Play</span>
+          </a>
         )}
 
         {/* Reminder button */}

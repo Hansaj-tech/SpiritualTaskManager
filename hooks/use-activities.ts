@@ -70,6 +70,7 @@ export function useActivities(): ActivityState {
           thisWeeksVanchan: data.thisWeeksVanchan ?? undefined,
           motivations: data.motivations ?? undefined,
           motivationDurationHours: data.motivationDurationHours ?? undefined,
+          activityYoutubeLinks: data.activityYoutubeLinks ?? undefined,
         })
       }
     })

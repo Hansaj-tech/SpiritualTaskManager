@@ -72,6 +72,7 @@ export interface AppConfig {
   thisWeeksVanchan?: ThisWeeksVanchan
   motivations?: string[]
   motivationDurationHours?: number
+  activityYoutubeLinks?: Record<string, string>
   updatedAt?: Date
   updatedBy?: string
 }

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useAdminUserDetail } from '@/hooks/use-admin'
-import { getActivityDefs } from '@/lib/firestore-helpers'
+import { getActivityDefs, setUserKshetraAdmin } from '@/lib/firestore-helpers'
+import { useAuth } from '@/contexts/auth-context'
 import { ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
 import type { AdminUser, ActivityStats } from '@/hooks/use-admin'
 import type { ActivityDefinition } from '@/types'
@@ -15,13 +16,28 @@ interface UserDetailPanelProps {
 type Period = 'month' | 'lifetime'
 
 export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
+  const { userProfile: currentUserProfile } = useAuth()
   const { monthlyLog, lifetimeLog, monthlyDays, lifetimeDays, loading, error } = useAdminUserDetail(uid)
   const [period, setPeriod] = useState<Period>('month')
   const [activityDefs, setActivityDefs] = useState<ActivityDefinition[]>([])
+  const [isKshetraAdmin, setIsKshetraAdmin] = useState(user?.isKshetraAdmin ?? false)
+  const [togglingKshetraAdmin, setTogglingKshetraAdmin] = useState(false)
+
+  useEffect(() => {
+    setIsKshetraAdmin(user?.isKshetraAdmin ?? false)
+  }, [user?.isKshetraAdmin])
 
   useEffect(() => {
     getActivityDefs().then(setActivityDefs)
   }, [])
+
+  async function handleToggleKshetraAdmin() {
+    setTogglingKshetraAdmin(true)
+    const next = !isKshetraAdmin
+    await setUserKshetraAdmin(uid, next)
+    setIsKshetraAdmin(next)
+    setTogglingKshetraAdmin(false)
+  }
 
   const log: ActivityStats = period === 'month' ? monthlyLog : lifetimeLog
   const totalDays = period === 'month' ? monthlyDays : lifetimeDays
@@ -52,10 +68,28 @@ export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
                 {user.isAdmin && (
                   <span className="text-xs bg-orange-600 text-white px-2 py-0.5 rounded-full font-medium">Admin</span>
                 )}
-                {user.isKshetraAdmin && !user.isAdmin && (
+                {isKshetraAdmin && !user.isAdmin && (
                   <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium">Kshetra Admin</span>
                 )}
               </div>
+
+              {currentUserProfile?.isAdmin && !user.isAdmin && (
+                <button
+                  onClick={handleToggleKshetraAdmin}
+                  disabled={togglingKshetraAdmin}
+                  className={`mt-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors disabled:opacity-60 ${
+                    isKshetraAdmin
+                      ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                      : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                  }`}
+                >
+                  {togglingKshetraAdmin
+                    ? 'Saving…'
+                    : isKshetraAdmin
+                    ? 'Remove Kshetra Admin'
+                    : 'Make Kshetra Admin'}
+                </button>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-3 mt-4 pt-4 border-t border-orange-50">

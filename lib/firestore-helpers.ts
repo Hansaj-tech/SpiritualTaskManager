@@ -181,6 +181,7 @@ export async function getAppConfig(): Promise<AppConfig> {
     thisWeeksVanchan: data.thisWeeksVanchan ?? undefined,
     motivations: data.motivations ?? undefined,
     motivationDurationHours: data.motivationDurationHours ?? undefined,
+    activityYoutubeLinks: data.activityYoutubeLinks ?? undefined,
     updatedAt: toDate(data.updatedAt) ?? undefined,
     updatedBy: data.updatedBy,
   }
@@ -202,6 +203,11 @@ export async function updateUserProfileData(
 ): Promise<void> {
   const ref = doc(db, 'users', uid)
   await updateDoc(ref, { ...data, updatedAt: serverTimestamp() })
+}
+
+export async function setUserKshetraAdmin(uid: string, value: boolean): Promise<void> {
+  const ref = doc(db, 'users', uid)
+  await updateDoc(ref, { isKshetraAdmin: value, updatedAt: serverTimestamp() })
 }
 
 export async function saveFcmToken(uid: string, token: string): Promise<void> {
@@ -293,4 +299,9 @@ export async function updateMotivations(motivations: string[], durationHours: nu
 export async function updateGuruImages(images: string[]): Promise<void> {
   const ref = doc(db, 'config', 'app')
   await setDoc(ref, { guruImages: images, updatedAt: serverTimestamp() }, { merge: true })
+}
+
+export async function updateActivityYoutubeLinks(links: Record<string, string>): Promise<void> {
+  const ref = doc(db, 'config', 'app')
+  await setDoc(ref, { activityYoutubeLinks: links, updatedAt: serverTimestamp() }, { merge: true })
 }
