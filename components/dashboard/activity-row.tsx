@@ -33,6 +33,11 @@ export function ActivityRow({
   const [expanded, setExpanded] = useState(false)
   const hasVanchan = !!vanchanText
   const hasYoutubeLink = !!youtubeLink
+  const normalizedYoutubeLink = youtubeLink
+    ? youtubeLink.startsWith('http://') || youtubeLink.startsWith('https://')
+      ? youtubeLink
+      : `https://${youtubeLink}`
+    : undefined
 
   return (
     <div className={cn(done && 'bg-orange-50/60 dark:bg-stone-800/60', disabled && 'opacity-50 cursor-not-allowed')}>
@@ -93,7 +98,7 @@ export function ActivityRow({
         {/* YouTube play button */}
         {hasYoutubeLink && (
           <a
-            href={youtubeLink}
+            href={normalizedYoutubeLink}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-medium transition-all flex-shrink-0 bg-orange-100 dark:bg-stone-700 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-stone-600"
