@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import * as Checkbox from '@radix-ui/react-checkbox'
-import { Check, Bell, BellOff, ChevronDown, ChevronUp, BookOpen, PlayCircle } from 'lucide-react'
+import { Check, Bell, BellOff, ChevronDown, ChevronUp, BookOpen, PlayCircle, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ActivityDefinition, ActivityLogEntry, ReminderPref } from '@/types'
 
@@ -15,6 +15,7 @@ interface ActivityRowProps {
   onReminderOpen: () => void
   disabled?: boolean
   vanchanText?: string
+  vanchanLink?: string
   youtubeLink?: string
 }
 
@@ -27,12 +28,18 @@ export function ActivityRow({
   onReminderOpen,
   disabled = false,
   vanchanText,
+  vanchanLink,
   youtubeLink,
 }: ActivityRowProps) {
   const done = logEntry?.done ?? false
   const [expanded, setExpanded] = useState(false)
   const hasVanchan = !!vanchanText
   const hasYoutubeLink = !!youtubeLink
+  const normalizedVanchanLink = vanchanLink
+    ? vanchanLink.startsWith('http://') || vanchanLink.startsWith('https://')
+      ? vanchanLink
+      : `https://${vanchanLink}`
+    : undefined
   const normalizedYoutubeLink = youtubeLink
     ? youtubeLink.startsWith('http://') || youtubeLink.startsWith('https://')
       ? youtubeLink
@@ -152,6 +159,17 @@ export function ActivityRow({
             <p className="text-sm text-orange-900 dark:text-orange-100 leading-relaxed whitespace-pre-wrap">
               {vanchanText}
             </p>
+            {normalizedVanchanLink && (
+              <a
+                href={normalizedVanchanLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 active:scale-95 transition-all"
+              >
+                <ExternalLink className="w-3 h-3" />
+                Read
+              </a>
+            )}
           </div>
         </div>
       )}

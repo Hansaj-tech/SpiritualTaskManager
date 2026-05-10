@@ -64,6 +64,7 @@ export interface ReminderPref {
 export interface ThisWeeksVanchan {
   vachnamrut: string
   swaminiVato: string
+  vachnamrutLink?: string
 }
 
 export interface AppConfig {

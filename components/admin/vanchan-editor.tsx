@@ -10,13 +10,14 @@ interface VanchanEditorProps {
 
 export function VanchanEditor({ initialVanchan }: VanchanEditorProps) {
   const [vachnamrut, setVachnamrut] = useState(initialVanchan?.vachnamrut ?? '')
+  const [vachnamrutLink, setVachnamrutLink] = useState(initialVanchan?.vachnamrutLink ?? '')
   const [swaminiVato, setSwaminiVato] = useState(initialVanchan?.swaminiVato ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
   async function handleSave() {
     setSaving(true)
-    await updateThisWeeksVanchan({ vachnamrut: vachnamrut.trim(), swaminiVato: swaminiVato.trim() })
+    await updateThisWeeksVanchan({ vachnamrut: vachnamrut.trim(), swaminiVato: swaminiVato.trim(), vachnamrutLink: vachnamrutLink.trim() })
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -36,6 +37,20 @@ export function VanchanEditor({ initialVanchan }: VanchanEditorProps) {
             placeholder="Enter this week's Vachanamrut passage..."
             className="w-full px-3 py-2 rounded-xl border-2 border-orange-200 text-orange-900 text-sm resize-none focus:outline-none focus:border-orange-600"
           />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-orange-900 mb-2 block">
+            Vachanamrut Vanchan Link
+          </label>
+          <input
+            type="url"
+            value={vachnamrutLink}
+            onChange={(e) => setVachnamrutLink(e.target.value)}
+            placeholder="https://..."
+            className="w-full px-3 py-2 rounded-xl border-2 border-orange-200 text-orange-900 text-sm focus:outline-none focus:border-orange-600"
+          />
+          <p className="text-xs text-orange-400 mt-1">Optional — users will see a &quot;Read&quot; button that opens this link.</p>
         </div>
 
         <div>
