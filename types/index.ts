@@ -65,6 +65,7 @@ export interface ThisWeeksVanchan {
   vachnamrut: string
   swaminiVato: string
   vachnamrutLink?: string
+  swaminiVatoLink?: string
 }
 
 export interface AppConfig {

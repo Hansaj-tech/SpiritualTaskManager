@@ -12,12 +12,13 @@ export function VanchanEditor({ initialVanchan }: VanchanEditorProps) {
   const [vachnamrut, setVachnamrut] = useState(initialVanchan?.vachnamrut ?? '')
   const [vachnamrutLink, setVachnamrutLink] = useState(initialVanchan?.vachnamrutLink ?? '')
   const [swaminiVato, setSwaminiVato] = useState(initialVanchan?.swaminiVato ?? '')
+  const [swaminiVatoLink, setSwaminiVatoLink] = useState(initialVanchan?.swaminiVatoLink ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
   async function handleSave() {
     setSaving(true)
-    await updateThisWeeksVanchan({ vachnamrut: vachnamrut.trim(), swaminiVato: swaminiVato.trim(), vachnamrutLink: vachnamrutLink.trim() })
+    await updateThisWeeksVanchan({ vachnamrut: vachnamrut.trim(), swaminiVato: swaminiVato.trim(), vachnamrutLink: vachnamrutLink.trim(), swaminiVatoLink: swaminiVatoLink.trim() })
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -64,6 +65,20 @@ export function VanchanEditor({ initialVanchan }: VanchanEditorProps) {
             placeholder="Enter this week's Swamini Vato passage..."
             className="w-full px-3 py-2 rounded-xl border-2 border-orange-200 text-orange-900 text-sm resize-none focus:outline-none focus:border-orange-600"
           />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-orange-900 mb-2 block">
+            Swamini Vato Nu Vanchan Link
+          </label>
+          <input
+            type="url"
+            value={swaminiVatoLink}
+            onChange={(e) => setSwaminiVatoLink(e.target.value)}
+            placeholder="https://..."
+            className="w-full px-3 py-2 rounded-xl border-2 border-orange-200 text-orange-900 text-sm focus:outline-none focus:border-orange-600"
+          />
+          <p className="text-xs text-orange-400 mt-1">Optional — users will see a &quot;Read&quot; button that opens this link.</p>
         </div>
 
         <p className="text-xs text-orange-400">

@@ -182,6 +182,8 @@ export default function DashboardPage() {
                 vanchanLink={
                   activity.id === 'vachnamrut-vanchan'
                     ? appConfig.thisWeeksVanchan?.vachnamrutLink
+                    : activity.id === 'swamini-vato-vanchan'
+                    ? appConfig.thisWeeksVanchan?.swaminiVatoLink
                     : undefined
                 }
                 youtubeLink={
