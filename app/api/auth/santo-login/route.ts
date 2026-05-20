@@ -57,8 +57,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ token })
   } catch (err) {
     const rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY ?? ''
-    const keyFirst = rawKey.substring(0, 40)
-    console.error('Santo login error:', err, '| key starts with:', JSON.stringify(keyFirst))
-    return NextResponse.json({ error: String(err), keyFirst }, { status: 500 })
+    const normalised = normaliseKey(rawKey)
+    const lines = normalised.split('\n')
+    const nonEmpty = lines.filter(Boolean)
+    const errMsg = `${err} | lines:${lines.length} | first:${JSON.stringify(nonEmpty[0] ?? '')} | last:${JSON.stringify(nonEmpty[nonEmpty.length - 1] ?? '')}`
+    console.error('Santo login error:', errMsg)
+    return NextResponse.json({ error: errMsg }, { status: 500 })
   }
 }
