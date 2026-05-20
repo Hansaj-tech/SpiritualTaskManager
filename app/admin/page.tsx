@@ -13,6 +13,8 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState('')
 
   const isGlobalAdmin = userProfile?.isAdmin
+  const isMultiKshetraAdmin = !userProfile?.isAdmin && userProfile?.isKshetraAdmin && (userProfile?.adminKshetras?.length ?? 0) > 1
+  const showKshetraTabs = isGlobalAdmin || isMultiKshetraAdmin
 
   const { kshetrasWithUsers, kshetraCounts, noKshetraCount } = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -37,7 +39,7 @@ export default function AdminPage() {
 
   const filteredUsers = useMemo(() => {
     let base = users
-    if (isGlobalAdmin && activeKshetra !== null) {
+    if (showKshetraTabs && activeKshetra !== null) {
       if (activeKshetra === '__none__') base = users.filter(u => !u.kshetra)
       else base = users.filter(u => u.kshetra === activeKshetra)
     }
@@ -48,7 +50,7 @@ export default function AdminPage() {
       )
     }
     return base
-  }, [users, isGlobalAdmin, activeKshetra, searchQuery])
+  }, [users, showKshetraTabs, activeKshetra, searchQuery])
 
   const tabClass = (active: boolean) =>
     `px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
@@ -64,7 +66,7 @@ export default function AdminPage() {
         <span className="text-sm text-orange-500">{filteredUsers.length} members</span>
       </div>
 
-      {isGlobalAdmin && !loading && (
+      {showKshetraTabs && !loading && (
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setActiveKshetra(null)}
@@ -81,7 +83,7 @@ export default function AdminPage() {
               {k} ({kshetraCounts[k]})
             </button>
           ))}
-          {noKshetraCount > 0 && (
+          {isGlobalAdmin && noKshetraCount > 0 && (
             <button
               onClick={() => setActiveKshetra('__none__')}
               className={tabClass(activeKshetra === '__none__')}
