@@ -1,11 +1,21 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
-import { ProfileForm } from '@/components/profile/profile-form'
+import { AchievementTab } from '@/components/profile/achievement-tab'
+import { useAuth } from '@/contexts/auth-context'
+import { getAppConfig } from '@/lib/firestore-helpers'
+import type { AppConfig } from '@/types'
 
-export default function ProfilePage() {
+export default function AchievementsPage() {
   const router = useRouter()
+  const { userProfile } = useAuth()
+  const [appConfig, setAppConfig] = useState<AppConfig | null>(null)
+
+  useEffect(() => {
+    getAppConfig().then(setAppConfig)
+  }, [])
 
   return (
     <div className="min-h-screen bg-orange-50 dark:bg-stone-950">
@@ -17,12 +27,15 @@ export default function ProfilePage() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="font-semibold text-orange-900 dark:text-orange-50">Edit Profile</h1>
+          <h1 className="font-semibold text-orange-900 dark:text-orange-50">Achievements</h1>
         </div>
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6">
-        <ProfileForm />
+        <AchievementTab
+          rajipo={userProfile?.rajipo ?? 0}
+          stages={appConfig?.achievementStages}
+        />
       </main>
     </div>
   )

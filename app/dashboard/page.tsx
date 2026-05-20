@@ -18,6 +18,7 @@ import { ACTIVITY_IDS, BONUS_ACTIVITY_IDS, DEFAULT_ACHIEVEMENT_STAGES } from '@/
 import { getActiveDate, isFillingYesterday } from '@/lib/date-utils'
 import { useRouter } from 'next/navigation'
 import { MilestoneOverlay } from '@/components/dashboard/milestone-overlay'
+import { BadgeStrip } from '@/components/dashboard/badge-strip'
 
 const ACHIEVEMENT_NOTIF_KEY = 'aahanik-achievement-intro-seen'
 
@@ -50,7 +51,7 @@ export default function DashboardPage() {
   const [achievementBannerDismissed, setAchievementBannerDismissed] = useState(true)
   const [milestoneOverlay, setMilestoneOverlay] = useState<{ points: number; tierIndex: number } | null>(null)
   const prevRajipoRef = useRef<number | null>(null)
-  const mountedRajipoRef = useRef(false)
+  const initCheckRef = useRef(false)
   const fillingYesterday = isFillingYesterday()
   const activeDateLabel = new Date(getActiveDate() + 'T12:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
 
@@ -68,17 +69,29 @@ export default function DashboardPage() {
     }
   }, [])
 
-  // Detect when user crosses a milestone threshold in real-time
+  // On first userProfile load: show animation for earned milestones not yet celebrated
   useEffect(() => {
-    if (!userProfile) return
-    const curr = userProfile.rajipo
+    if (!userProfile || initCheckRef.current) return
+    initCheckRef.current = true
+    prevRajipoRef.current = userProfile.rajipo
 
-    if (!mountedRajipoRef.current) {
-      prevRajipoRef.current = curr
-      mountedRajipoRef.current = true
-      return
+    const stages = [...(appConfig.achievementStages ?? DEFAULT_ACHIEVEMENT_STAGES)].sort((a, b) => a - b)
+    // Show the highest unseen milestone (so they see the best badge they've earned)
+    for (let i = stages.length - 1; i >= 0; i--) {
+      const m = stages[i]
+      if (userProfile.rajipo >= m && !localStorage.getItem(`aahanik-milestone-seen-${m}`)) {
+        setMilestoneOverlay({ points: m, tierIndex: i })
+        localStorage.setItem(`aahanik-milestone-seen-${m}`, '1')
+        break
+      }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userProfile])
 
+  // Real-time detection when rajipo increases past a milestone
+  useEffect(() => {
+    if (!userProfile || !initCheckRef.current) return
+    const curr = userProfile.rajipo
     const prev = prevRajipoRef.current ?? curr
     prevRajipoRef.current = curr
 
@@ -87,12 +100,9 @@ export default function DashboardPage() {
     const stages = [...(appConfig.achievementStages ?? DEFAULT_ACHIEVEMENT_STAGES)].sort((a, b) => a - b)
     for (let i = 0; i < stages.length; i++) {
       const m = stages[i]
-      if (prev < m && curr >= m) {
-        const key = `aahanik-milestone-seen-${m}`
-        if (!localStorage.getItem(key)) {
-          setMilestoneOverlay({ points: m, tierIndex: i })
-          localStorage.setItem(key, '1')
-        }
+      if (prev < m && curr >= m && !localStorage.getItem(`aahanik-milestone-seen-${m}`)) {
+        setMilestoneOverlay({ points: m, tierIndex: i })
+        localStorage.setItem(`aahanik-milestone-seen-${m}`, '1')
         break
       }
     }
@@ -191,7 +201,7 @@ export default function DashboardPage() {
               onClick={() => {
                 localStorage.setItem(ACHIEVEMENT_NOTIF_KEY, '1')
                 setAchievementBannerDismissed(true)
-                router.push('/profile?tab=achievements')
+                router.push('/achievements')
               }}
               className="px-3 py-1.5 bg-orange-600 text-white text-xs font-semibold rounded-xl hover:bg-orange-700 transition-colors flex-shrink-0"
             >
@@ -236,6 +246,12 @@ export default function DashboardPage() {
           streak={mainStreak}
           todayPoints={todayLog.totalPoints}
           guruImages={appConfig.guruImages}
+        />
+
+        {/* Badge strip */}
+        <BadgeStrip
+          rajipo={userProfile?.rajipo ?? 0}
+          stages={appConfig.achievementStages}
         />
 
         {/* Progress bar */}

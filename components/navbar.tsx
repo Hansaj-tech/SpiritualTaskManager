@@ -137,7 +137,7 @@ export function Navbar() {
 
               <DropdownMenu.Item
                 className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-orange-800 dark:text-orange-200 rounded-xl hover:bg-orange-50 dark:hover:bg-stone-800 cursor-pointer outline-none transition-colors"
-                onSelect={() => router.push('/profile?tab=achievements')}
+                onSelect={() => router.push('/achievements')}
               >
                 <Trophy className="w-4 h-4 text-orange-500" />
                 Achievements
