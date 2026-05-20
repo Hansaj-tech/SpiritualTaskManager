@@ -13,12 +13,16 @@ import { ActivityRow } from '@/components/dashboard/activity-row'
 import { ReminderModal } from '@/components/reminders/reminder-modal'
 import { LeaderboardCard } from '@/components/leaderboard/leaderboard-card'
 import { useLeaderboard } from '@/hooks/use-leaderboard'
-import { Loader2, Bell, X, CalendarDays, Star, Clock } from 'lucide-react'
+import { Loader2, Bell, X, CalendarDays, Star, Clock, Trophy } from 'lucide-react'
 import { ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
 import { getActiveDate, isFillingYesterday } from '@/lib/date-utils'
+import { useRouter } from 'next/navigation'
+
+const ACHIEVEMENT_NOTIF_KEY = 'aahanik-achievement-intro-seen'
 
 export default function DashboardPage() {
   const { userProfile } = useAuth()
+  const router = useRouter()
   const { requestPermission } = useFcm()
   const {
     activityDefs,
@@ -42,12 +46,21 @@ export default function DashboardPage() {
   const [notifDismissed, setNotifDismissed] = useState(false)
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>('default')
   const [weeklyBannerDismissed, setWeeklyBannerDismissed] = useState(false)
+  const [achievementBannerDismissed, setAchievementBannerDismissed] = useState(true)
   const fillingYesterday = isFillingYesterday()
   const activeDateLabel = new Date(getActiveDate() + 'T12:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
 
   useEffect(() => {
     if (typeof Notification !== 'undefined') {
       setNotifPermission(Notification.permission)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof localStorage !== 'undefined') {
+      if (!localStorage.getItem(ACHIEVEMENT_NOTIF_KEY)) {
+        setAchievementBannerDismissed(false)
+      }
     }
   }, [])
 
@@ -123,6 +136,38 @@ export default function DashboardPage() {
             <button
               onClick={() => setNotifDismissed(true)}
               className="w-6 h-6 rounded-full hover:bg-orange-50 flex items-center justify-center text-orange-300 flex-shrink-0"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* Achievement discovery banner — shown once to all users */}
+        {!achievementBannerDismissed && (
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 rounded-2xl border border-amber-200 dark:border-amber-800/50 px-4 py-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-yellow-300 to-orange-400 flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Trophy className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-orange-900 dark:text-orange-100">Achievements Unlocked!</p>
+              <p className="text-xs text-orange-500 dark:text-orange-400">Earn badges as you grow your Rajipo 🏅</p>
+            </div>
+            <button
+              onClick={() => {
+                localStorage.setItem(ACHIEVEMENT_NOTIF_KEY, '1')
+                setAchievementBannerDismissed(true)
+                router.push('/profile?tab=achievements')
+              }}
+              className="px-3 py-1.5 bg-orange-600 text-white text-xs font-semibold rounded-xl hover:bg-orange-700 transition-colors flex-shrink-0"
+            >
+              View
+            </button>
+            <button
+              onClick={() => {
+                localStorage.setItem(ACHIEVEMENT_NOTIF_KEY, '1')
+                setAchievementBannerDismissed(true)
+              }}
+              className="w-6 h-6 rounded-full hover:bg-orange-100 flex items-center justify-center text-orange-300 flex-shrink-0"
             >
               <X className="w-3.5 h-3.5" />
             </button>

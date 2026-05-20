@@ -44,8 +44,7 @@ export default function AdminPage() {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       base = base.filter(u =>
-        u.displayName.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q)
+        u.displayName.toLowerCase().includes(q)
       )
     }
     return base
@@ -98,7 +97,7 @@ export default function AdminPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-400 pointer-events-none" />
         <input
           type="text"
-          placeholder="Search by name or email…"
+          placeholder="Search by name…"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           className="w-full h-10 pl-9 pr-9 rounded-xl border border-orange-200 bg-white text-sm text-orange-900 placeholder-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-400"

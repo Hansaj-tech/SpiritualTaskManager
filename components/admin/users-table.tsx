@@ -59,7 +59,9 @@ export function UsersTable({ users, loading, error }: UsersTableProps) {
         >
           <div className="col-span-2 min-w-0">
             <p className="text-sm font-medium text-orange-900 truncate">{u.displayName}</p>
-            <p className="text-xs text-orange-400 truncate">{u.email}</p>
+            {u.kshetra && (
+              <p className="text-xs text-orange-400 truncate">{u.kshetra}</p>
+            )}
           </div>
           <span className="text-sm text-orange-700 font-medium">{u.kshetra ?? '—'}</span>
           <span className="text-sm text-orange-700">🔥{u.streak}</span>

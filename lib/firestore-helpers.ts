@@ -25,6 +25,7 @@ export function docToUserProfile(uid: string, data: DocumentData): UserProfile {
     kshetra: data.kshetra ?? null,
     isAdmin: data.isAdmin ?? false,
     isKshetraAdmin: data.isKshetraAdmin ?? false,
+    adminKshetras: data.adminKshetras ?? undefined,
     rajipo: data.rajipo ?? 0,
     monthlyRajipo: data.monthlyRajipo ?? 0,
     monthlyRajipoMonth: data.monthlyRajipoMonth ?? '',
@@ -183,6 +184,7 @@ export async function getAppConfig(): Promise<AppConfig> {
     motivations: data.motivations ?? undefined,
     motivationDurationHours: data.motivationDurationHours ?? undefined,
     activityYoutubeLinks: data.activityYoutubeLinks ?? undefined,
+    achievementStages: data.achievementStages ?? undefined,
     updatedAt: toDate(data.updatedAt) ?? undefined,
     updatedBy: data.updatedBy,
   }
@@ -206,9 +208,20 @@ export async function updateUserProfileData(
   await updateDoc(ref, { ...data, updatedAt: serverTimestamp() })
 }
 
-export async function setUserKshetraAdmin(uid: string, value: boolean): Promise<void> {
+export async function setUserKshetraAdmin(uid: string, value: boolean, kshetras?: string[]): Promise<void> {
   const ref = doc(db, 'users', uid)
-  await updateDoc(ref, { isKshetraAdmin: value, updatedAt: serverTimestamp() })
+  const update: Record<string, unknown> = { isKshetraAdmin: value, updatedAt: serverTimestamp() }
+  if (value && kshetras && kshetras.length > 0) {
+    update.adminKshetras = kshetras
+  } else if (!value) {
+    update.adminKshetras = []
+  }
+  await updateDoc(ref, update)
+}
+
+export async function updateAchievementStages(stages: number[]): Promise<void> {
+  const ref = doc(db, 'config', 'app')
+  await setDoc(ref, { achievementStages: stages.slice().sort((a, b) => a - b), updatedAt: serverTimestamp() }, { merge: true })
 }
 
 export async function saveFcmToken(uid: string, token: string): Promise<void> {

@@ -72,14 +72,6 @@ export function ProfileForm() {
         />
       </div>
 
-      {/* Email (read-only) */}
-      <div>
-        <label className="text-sm font-medium text-orange-900 dark:text-orange-100 mb-1.5 block">Email</label>
-        <div className="h-11 px-4 rounded-xl border-2 border-orange-100 dark:border-stone-700 bg-orange-50 dark:bg-stone-800 flex items-center text-sm text-orange-400 dark:text-stone-500">
-          {userProfile?.email}
-        </div>
-      </div>
-
       {/* Kshetra */}
       <div>
         <label className="text-sm font-medium text-orange-900 dark:text-orange-100 mb-2 block">Kshetra</label>

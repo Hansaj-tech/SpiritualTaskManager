@@ -44,6 +44,7 @@ export interface UserProfile {
   kshetra: string | null
   isAdmin: boolean
   isKshetraAdmin: boolean
+  adminKshetras?: string[]
   rajipo: number
   monthlyRajipo: number
   monthlyRajipoMonth: string
@@ -75,6 +76,7 @@ export interface AppConfig {
   motivations?: string[]
   motivationDurationHours?: number
   activityYoutubeLinks?: Record<string, string>
+  achievementStages?: number[]
   updatedAt?: Date
   updatedBy?: string
 }

@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAdminUserDetail } from '@/hooks/use-admin'
 import { getActivityDefs, setUserKshetraAdmin } from '@/lib/firestore-helpers'
 import { useAuth } from '@/contexts/auth-context'
-import { ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
+import { ACTIVITY_IDS, BONUS_ACTIVITY_IDS, KSHETRA_OPTIONS } from '@/lib/constants'
+import { ChevronDown, Check } from 'lucide-react'
 import type { AdminUser, ActivityStats } from '@/hooks/use-admin'
 import type { ActivityDefinition } from '@/types'
 
@@ -21,21 +22,58 @@ export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
   const [period, setPeriod] = useState<Period>('month')
   const [activityDefs, setActivityDefs] = useState<ActivityDefinition[]>([])
   const [isKshetraAdmin, setIsKshetraAdmin] = useState(user?.isKshetraAdmin ?? false)
+  const [adminKshetras, setAdminKshetras] = useState<string[]>(user?.adminKshetras ?? [])
   const [togglingKshetraAdmin, setTogglingKshetraAdmin] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [pendingKshetras, setPendingKshetras] = useState<string[]>([])
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setIsKshetraAdmin(user?.isKshetraAdmin ?? false)
-  }, [user?.isKshetraAdmin])
+    setAdminKshetras(user?.adminKshetras ?? [])
+  }, [user?.isKshetraAdmin, user?.adminKshetras])
 
   useEffect(() => {
     getActivityDefs().then(setActivityDefs)
   }, [])
 
-  async function handleToggleKshetraAdmin() {
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  function handleOpenMakeAdmin() {
+    setPendingKshetras(adminKshetras.length > 0 ? [...adminKshetras] : (user?.kshetra ? [user.kshetra] : []))
+    setDropdownOpen(true)
+  }
+
+  function togglePendingKshetra(k: string) {
+    setPendingKshetras(prev =>
+      prev.includes(k) ? prev.filter(x => x !== k) : [...prev, k]
+    )
+  }
+
+  async function handleConfirmMakeAdmin() {
+    if (pendingKshetras.length === 0) return
     setTogglingKshetraAdmin(true)
-    const next = !isKshetraAdmin
-    await setUserKshetraAdmin(uid, next)
-    setIsKshetraAdmin(next)
+    setDropdownOpen(false)
+    await setUserKshetraAdmin(uid, true, pendingKshetras)
+    setIsKshetraAdmin(true)
+    setAdminKshetras(pendingKshetras)
+    setTogglingKshetraAdmin(false)
+  }
+
+  async function handleRemoveAdmin() {
+    setTogglingKshetraAdmin(true)
+    await setUserKshetraAdmin(uid, false)
+    setIsKshetraAdmin(false)
+    setAdminKshetras([])
     setTogglingKshetraAdmin(false)
   }
 
@@ -63,32 +101,68 @@ export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
             )}
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-orange-900">{user.displayName}</p>
-              <p className="text-sm text-orange-400">{user.email}</p>
               <div className="flex flex-wrap gap-1 mt-1">
                 {user.isAdmin && (
                   <span className="text-xs bg-orange-600 text-white px-2 py-0.5 rounded-full font-medium">Admin</span>
                 )}
                 {isKshetraAdmin && !user.isAdmin && (
-                  <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium">Kshetra Admin</span>
+                  <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium">
+                    Kshetra Admin{adminKshetras.length > 0 ? `: ${adminKshetras.join(', ')}` : ''}
+                  </span>
                 )}
               </div>
 
               {currentUserProfile?.isAdmin && !user.isAdmin && (
-                <button
-                  onClick={handleToggleKshetraAdmin}
-                  disabled={togglingKshetraAdmin}
-                  className={`mt-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors disabled:opacity-60 ${
-                    isKshetraAdmin
-                      ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                      : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-                  }`}
-                >
-                  {togglingKshetraAdmin
-                    ? 'Saving…'
-                    : isKshetraAdmin
-                    ? 'Remove Kshetra Admin'
-                    : 'Make Kshetra Admin'}
-                </button>
+                <div className="mt-2 flex flex-wrap gap-2 items-center" ref={dropdownRef}>
+                  {isKshetraAdmin ? (
+                    <>
+                      {/* Edit kshetras button */}
+                      <div className="relative">
+                        <button
+                          onClick={handleOpenMakeAdmin}
+                          disabled={togglingKshetraAdmin}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors disabled:opacity-60"
+                        >
+                          Edit Kshetras
+                          <ChevronDown className="w-3 h-3" />
+                        </button>
+                        {dropdownOpen && (
+                          <KshetraDropdown
+                            selected={pendingKshetras}
+                            onToggle={togglePendingKshetra}
+                            onConfirm={handleConfirmMakeAdmin}
+                          />
+                        )}
+                      </div>
+                      {/* Remove admin button */}
+                      <button
+                        onClick={handleRemoveAdmin}
+                        disabled={togglingKshetraAdmin}
+                        className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-red-100 text-red-600 hover:bg-red-200 transition-colors disabled:opacity-60"
+                      >
+                        {togglingKshetraAdmin ? 'Saving…' : 'Remove Admin'}
+                      </button>
+                    </>
+                  ) : (
+                    <div className="relative">
+                      <button
+                        onClick={handleOpenMakeAdmin}
+                        disabled={togglingKshetraAdmin}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors disabled:opacity-60"
+                      >
+                        {togglingKshetraAdmin ? 'Saving…' : 'Make Kshetra Admin'}
+                        {!togglingKshetraAdmin && <ChevronDown className="w-3 h-3" />}
+                      </button>
+                      {dropdownOpen && (
+                        <KshetraDropdown
+                          selected={pendingKshetras}
+                          onToggle={togglePendingKshetra}
+                          onConfirm={handleConfirmMakeAdmin}
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -228,6 +302,50 @@ export function UserDetailPanel({ uid, user }: UserDetailPanelProps) {
             })}
           </>
         )}
+      </div>
+    </div>
+  )
+}
+
+interface KshetraDropdownProps {
+  selected: string[]
+  onToggle: (k: string) => void
+  onConfirm: () => void
+}
+
+function KshetraDropdown({ selected, onToggle, onConfirm }: KshetraDropdownProps) {
+  return (
+    <div className="absolute left-0 top-full mt-1 z-50 bg-white rounded-2xl shadow-xl border border-orange-100 p-3 min-w-[220px]">
+      <p className="text-xs font-semibold text-orange-500 uppercase tracking-wide mb-2">
+        Select Kshetra(s) to Admin
+      </p>
+      <div className="grid grid-cols-3 gap-1.5 max-h-52 overflow-y-auto">
+        {KSHETRA_OPTIONS.map((k) => {
+          const active = selected.includes(k)
+          return (
+            <button
+              key={k}
+              onClick={() => onToggle(k)}
+              className={`flex items-center justify-between gap-1 px-2 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                active
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-orange-50 text-orange-700 border-orange-100 hover:border-orange-300'
+              }`}
+            >
+              <span>{k}</span>
+              {active && <Check className="w-3 h-3 flex-shrink-0" />}
+            </button>
+          )
+        })}
+      </div>
+      <div className="mt-3 flex gap-2">
+        <button
+          onClick={onConfirm}
+          disabled={selected.length === 0}
+          className="flex-1 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+        >
+          Confirm ({selected.length})
+        </button>
       </div>
     </div>
   )

@@ -8,6 +8,7 @@ import { ImagesEditor } from '@/components/admin/images-editor'
 import { VanchanEditor } from '@/components/admin/vanchan-editor'
 import { MotivationsEditor } from '@/components/admin/motivations-editor'
 import { YouTubeLinksEditor } from '@/components/admin/youtube-links-editor'
+import { AchievementEditor } from '@/components/admin/achievement-editor'
 import { getActivityDefs, getAppConfig } from '@/lib/firestore-helpers'
 import { useAuth } from '@/contexts/auth-context'
 import type { ActivityDefinition, AppConfig } from '@/types'
@@ -39,7 +40,7 @@ export default function AdminSettingsPage() {
     )
   }
 
-  const tabs = ['points', 'motivations', 'vanchan', 'images', 'links'] as const
+  const tabs = ['points', 'motivations', 'vanchan', 'images', 'links', 'achievements'] as const
 
   return (
     <div className="flex flex-col gap-4">
@@ -57,7 +58,8 @@ export default function AdminSettingsPage() {
                 : tab === 'motivations' ? 'Motivations'
                 : tab === 'vanchan' ? 'Vanchan'
                 : tab === 'images' ? 'Images'
-                : 'Links'}
+                : tab === 'links' ? 'Links'
+                : 'Achievements'}
             </Tabs.Trigger>
           ))}
         </Tabs.List>
@@ -86,6 +88,10 @@ export default function AdminSettingsPage() {
             activityDefs={activityDefs}
             initialLinks={appConfig.activityYoutubeLinks}
           />
+        </Tabs.Content>
+
+        <Tabs.Content value="achievements">
+          <AchievementEditor initialStages={appConfig.achievementStages} />
         </Tabs.Content>
       </Tabs.Root>
     </div>

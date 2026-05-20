@@ -24,18 +24,27 @@ export function useAdminUsers() {
     let cancelled = false
 
     const isKshetraOnly = userProfile.isKshetraAdmin && !userProfile.isAdmin
-    const q = isKshetraOnly && userProfile.kshetra
+    const adminKshetras = userProfile.adminKshetras ?? []
+
+    // If kshetra admin has explicit adminKshetras list, fetch all then filter client-side
+    // (Firestore doesn't support array-contains-any without composite index for this pattern)
+    const q = isKshetraOnly && adminKshetras.length === 0 && userProfile.kshetra
       ? query(collection(db, 'users'), where('kshetra', '==', userProfile.kshetra))
       : collection(db, 'users')
 
     getDocs(q)
       .then((snap) => {
         if (cancelled) return
-        const list: AdminUser[] = snap.docs.map((d) => {
+        let list: AdminUser[] = snap.docs.map((d) => {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { fcmTokens, ...rest } = docToUserProfile(d.id, d.data())
           return rest
         })
+        // Filter to adminKshetras when explicitly set
+        if (isKshetraOnly && adminKshetras.length > 0) {
+          const kshetraSet = new Set(adminKshetras)
+          list = list.filter(u => u.kshetra && kshetraSet.has(u.kshetra))
+        }
         list.sort((a, b) => (b.rajipo ?? 0) - (a.rajipo ?? 0))
         setUsers(list)
         setLoading(false)
