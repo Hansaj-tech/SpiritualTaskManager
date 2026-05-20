@@ -3,33 +3,24 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { getMessaging } from 'firebase-admin/messaging'
 import { getAuth } from 'firebase-admin/auth'
 
-function parsePrivateKey(raw: string): string {
-  let k = raw.trim()
-  // Try JSON.parse: handles keys stored as JSON strings (with quotes + \n escapes)
-  try {
-    const parsed = JSON.parse(k)
-    if (typeof parsed === 'string') return parsed
-  } catch {}
-  // Strip surrounding quotes (single or double)
-  if ((k.startsWith('"') && k.endsWith('"')) || (k.startsWith("'") && k.endsWith("'"))) {
-    k = k.slice(1, -1)
-  }
-  // Convert literal \n sequences to real newlines
-  return k.replace(/\\n/g, '\n')
-}
-
 let adminApp: App | undefined
 
 function getAdminApp(): App {
   if (!adminApp) {
     if (getApps().length === 0) {
-      adminApp = initializeApp({
-        credential: cert({
-          projectId:   process.env.FIREBASE_ADMIN_PROJECT_ID!,
-          clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL!,
-          privateKey:  parsePrivateKey(process.env.FIREBASE_ADMIN_PRIVATE_KEY!),
-        }),
-      })
+      // Preferred: full service account JSON as one env var — no key parsing issues
+      if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+        const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON)
+        adminApp = initializeApp({ credential: cert(sa) })
+      } else {
+        adminApp = initializeApp({
+          credential: cert({
+            projectId:   process.env.FIREBASE_ADMIN_PROJECT_ID!,
+            clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL!,
+            privateKey:  process.env.FIREBASE_ADMIN_PRIVATE_KEY!.replace(/\\n/g, '\n'),
+          }),
+        })
+      }
     } else {
       adminApp = getApps()[0]
     }
