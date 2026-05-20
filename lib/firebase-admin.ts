@@ -6,11 +6,15 @@ import { getAuth } from 'firebase-admin/auth'
 let adminApp: App | undefined
 
 function parsePrivateKey(raw: string): string {
-  // Vercel stores the key either with literal \n escape sequences or with actual newlines.
-  // Handle both so the PEM is always correctly formatted.
-  const key = raw.replace(/\\n/g, '\n')
-  // Strip surrounding quotes that are sometimes copy-pasted from the JSON file
-  return key.replace(/^["']|["']$/g, '')
+  const trimmed = raw.trim()
+  // Case 1: value was pasted with surrounding quotes from .env.local or the JSON file,
+  // e.g.  "-----BEGIN PRIVATE KEY-----\nMII...\n-----END PRIVATE KEY-----\n"
+  // JSON.parse handles both the quote removal and \n unescaping in one step.
+  if (trimmed.startsWith('"')) {
+    try { return JSON.parse(trimmed) } catch { /* fall through */ }
+  }
+  // Case 2: value has no outer quotes but still has literal \n sequences
+  return trimmed.replace(/\\n/g, '\n')
 }
 
 function getAdminApp(): App {
