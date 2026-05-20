@@ -13,8 +13,9 @@ import { ActivityRow } from '@/components/dashboard/activity-row'
 import { ReminderModal } from '@/components/reminders/reminder-modal'
 import { LeaderboardCard } from '@/components/leaderboard/leaderboard-card'
 import { useLeaderboard } from '@/hooks/use-leaderboard'
-import { Loader2, Bell, X, CalendarDays, Star } from 'lucide-react'
+import { Loader2, Bell, X, CalendarDays, Star, Clock } from 'lucide-react'
 import { ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
+import { getActiveDate, isFillingYesterday } from '@/lib/date-utils'
 
 export default function DashboardPage() {
   const { userProfile } = useAuth()
@@ -41,6 +42,8 @@ export default function DashboardPage() {
   const [notifDismissed, setNotifDismissed] = useState(false)
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>('default')
   const [weeklyBannerDismissed, setWeeklyBannerDismissed] = useState(false)
+  const fillingYesterday = isFillingYesterday()
+  const activeDateLabel = new Date(getActiveDate() + 'T12:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
 
   useEffect(() => {
     if (typeof Notification !== 'undefined') {
@@ -81,12 +84,25 @@ export default function DashboardPage() {
         {/* Greeting */}
         <div className="px-1 pt-1">
           <p className="text-xs text-orange-400 font-medium uppercase tracking-wider">
-            {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+            {activeDateLabel}
           </p>
           <h1 className="text-xl font-bold text-orange-900 dark:text-orange-50 mt-0.5">
             {getGreeting()}, {userProfile?.displayName?.split(' ')[0] ?? 'Devotee'} 🙏
           </h1>
         </div>
+
+        {/* Yesterday's aahanik banner — shown before 6am */}
+        {fillingYesterday && (
+          <div className="bg-amber-50 dark:bg-amber-950/30 rounded-2xl border border-amber-200 dark:border-amber-800/50 px-4 py-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
+              <Clock className="w-4 h-4 text-amber-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">Filling Yesterday&apos;s Aahanik</p>
+              <p className="text-xs text-amber-600 dark:text-amber-400">It&apos;s before 6 AM — activities saved for {activeDateLabel}</p>
+            </div>
+          </div>
+        )}
 
         {/* Notification permission banner */}
         {showNotifBanner && (

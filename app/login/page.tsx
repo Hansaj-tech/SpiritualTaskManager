@@ -1,8 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/contexts/auth-context'
-import { Loader2 } from 'lucide-react'
+import { signInWithCustomToken } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
+import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { BapsLogo } from '@/components/baps-logo'
 
 function GoogleIcon() {
@@ -19,10 +21,18 @@ function GoogleIcon() {
 export default function LoginPage() {
   const { user, loading, loginWithGoogle } = useAuth()
   const [signingIn, setSigningIn] = useState(false)
+  const [santoMode, setSantoMode] = useState(false)
+  const [santoUsername, setSantoUsername] = useState('')
+  const [santoPassword, setSantoPassword] = useState('')
+  const [santoShowPassword, setSantoShowPassword] = useState(false)
+  const [santoError, setSantoError] = useState('')
+  const [santoLoading, setSantoLoading] = useState(false)
+  // Ref tracks whether the ongoing sign-in is a santo login so we redirect to /admin
+  const santoLoginRef = useRef(false)
 
   useEffect(() => {
     if (!loading && user) {
-      window.location.href = '/dashboard'
+      window.location.href = santoLoginRef.current ? '/admin' : '/dashboard'
     }
   }, [user, loading])
 
@@ -32,6 +42,30 @@ export default function LoginPage() {
       await loginWithGoogle()
     } catch {
       setSigningIn(false)
+    }
+  }
+
+  async function handleSantoLogin(e: React.FormEvent) {
+    e.preventDefault()
+    setSantoLoading(true)
+    setSantoError('')
+    try {
+      const res = await fetch('/api/auth/santo-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: santoUsername, password: santoPassword }),
+      })
+      if (!res.ok) {
+        setSantoError('Invalid credentials. Please try again.')
+        setSantoLoading(false)
+        return
+      }
+      const { token } = await res.json()
+      santoLoginRef.current = true
+      await signInWithCustomToken(auth, token)
+    } catch {
+      setSantoError('Login failed. Please try again.')
+      setSantoLoading(false)
     }
   }
 
@@ -97,6 +131,67 @@ export default function LoginPage() {
         <p className="text-xs text-orange-300 text-center mt-5 leading-relaxed">
           By continuing, you agree to track your<br />daily spiritual activities with devotion
         </p>
+
+        {/* Santo's Login */}
+        <div className="mt-6 pt-5 border-t border-orange-100">
+          {!santoMode ? (
+            <button
+              onClick={() => setSantoMode(true)}
+              className="w-full text-xs text-orange-300 hover:text-orange-500 transition-colors py-1"
+            >
+              Santo&apos;s Login
+            </button>
+          ) : (
+            <form onSubmit={handleSantoLogin} className="flex flex-col gap-3">
+              <p className="text-xs font-semibold text-orange-700 text-center mb-1">Admin Login</p>
+              <input
+                type="text"
+                placeholder="Username"
+                value={santoUsername}
+                onChange={e => setSantoUsername(e.target.value)}
+                autoComplete="username"
+                className="w-full h-11 px-4 rounded-xl border border-orange-200 text-sm text-orange-900 placeholder-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-orange-50"
+              />
+              <div className="relative">
+                <input
+                  type={santoShowPassword ? 'text' : 'password'}
+                  placeholder="Password"
+                  value={santoPassword}
+                  onChange={e => setSantoPassword(e.target.value)}
+                  autoComplete="current-password"
+                  className="w-full h-11 px-4 pr-11 rounded-xl border border-orange-200 text-sm text-orange-900 placeholder-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-orange-50"
+                />
+                <button
+                  type="button"
+                  onClick={() => setSantoShowPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-orange-400 hover:text-orange-600"
+                >
+                  {santoShowPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {santoError && (
+                <p className="text-xs text-red-500 text-center">{santoError}</p>
+              )}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setSantoMode(false); setSantoError('') }}
+                  className="flex-1 h-10 rounded-xl border border-orange-200 text-sm text-orange-500 hover:bg-orange-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={santoLoading || !santoUsername || !santoPassword}
+                  className="flex-1 h-10 rounded-xl bg-orange-600 text-white text-sm font-semibold hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {santoLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {santoLoading ? 'Signing in…' : 'Sign In'}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   )

@@ -4,11 +4,13 @@ import { useState, useMemo } from 'react'
 import { useAdminUsers } from '@/hooks/use-admin'
 import { UsersTable } from '@/components/admin/users-table'
 import { useAuth } from '@/contexts/auth-context'
+import { Search, X } from 'lucide-react'
 
 export default function AdminPage() {
   const { userProfile } = useAuth()
   const { users, loading, error } = useAdminUsers()
   const [activeKshetra, setActiveKshetra] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const isGlobalAdmin = userProfile?.isAdmin
 
@@ -22,17 +24,32 @@ export default function AdminPage() {
         noKsh++
       }
     }
-    const sorted = Object.keys(counts).sort(
-      (a, b) => parseInt(a.replace('K', '')) - parseInt(b.replace('K', ''))
-    )
+    const sorted = Object.keys(counts).sort((a, b) => {
+      const numA = parseInt(a.replace('K', ''))
+      const numB = parseInt(b.replace('K', ''))
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB
+      if (!isNaN(numA)) return -1
+      if (!isNaN(numB)) return 1
+      return a.localeCompare(b)
+    })
     return { kshetrasWithUsers: sorted, kshetraCounts: counts, noKshetraCount: noKsh }
   }, [users])
 
   const filteredUsers = useMemo(() => {
-    if (!isGlobalAdmin || activeKshetra === null) return users
-    if (activeKshetra === '__none__') return users.filter(u => !u.kshetra)
-    return users.filter(u => u.kshetra === activeKshetra)
-  }, [users, isGlobalAdmin, activeKshetra])
+    let base = users
+    if (isGlobalAdmin && activeKshetra !== null) {
+      if (activeKshetra === '__none__') base = users.filter(u => !u.kshetra)
+      else base = users.filter(u => u.kshetra === activeKshetra)
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      base = base.filter(u =>
+        u.displayName.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q)
+      )
+    }
+    return base
+  }, [users, isGlobalAdmin, activeKshetra, searchQuery])
 
   const tabClass = (active: boolean) =>
     `px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
@@ -75,6 +92,26 @@ export default function AdminPage() {
           )}
         </div>
       )}
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-400 pointer-events-none" />
+        <input
+          type="text"
+          placeholder="Search by name or email…"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          className="w-full h-10 pl-9 pr-9 rounded-xl border border-orange-200 bg-white text-sm text-orange-900 placeholder-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-orange-400 hover:text-orange-600"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
 
       <UsersTable users={filteredUsers} loading={loading} error={error} />
     </div>

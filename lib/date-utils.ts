@@ -4,6 +4,20 @@ export function todayKey(): string {
   return format(new Date(), 'yyyy-MM-dd')
 }
 
+// Returns yesterday's date before 6am, otherwise today's date.
+// Users can fill the previous day's aahanik until 6am the next morning.
+export function getActiveDate(): string {
+  const now = new Date()
+  if (now.getHours() < 6) {
+    return format(subDays(now, 1), 'yyyy-MM-dd')
+  }
+  return format(now, 'yyyy-MM-dd')
+}
+
+export function isFillingYesterday(): boolean {
+  return new Date().getHours() < 6
+}
+
 export function computeStreak(
   allCompleted: boolean,
   currentStreak: number,

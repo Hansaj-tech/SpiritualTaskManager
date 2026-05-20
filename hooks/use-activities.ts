@@ -18,7 +18,7 @@ import {
   saveActivityToggle,
   docToDayLog,
 } from '@/lib/firestore-helpers'
-import { todayKey, computeActivityStreak, getWeekDates } from '@/lib/date-utils'
+import { todayKey, getActiveDate, computeActivityStreak, getWeekDates } from '@/lib/date-utils'
 import { ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
 import type { ActivityDefinition, DayLog, AppConfig } from '@/types'
 
@@ -36,7 +36,7 @@ export interface ActivityState {
 type HistoryLog = { date: string; activities: Record<string, { done: boolean }> }
 
 function emptyLog(): DayLog {
-  return { date: todayKey(), activities: {}, totalPoints: 0, allCompleted: false }
+  return { date: getActiveDate(), activities: {}, totalPoints: 0, allCompleted: false }
 }
 
 export function useActivities(): ActivityState {
@@ -76,10 +76,11 @@ export function useActivities(): ActivityState {
     })
   }, [])
 
-  // Real-time listener for today's activity log
+  // Real-time listener for the active day's activity log.
+  // Before 6am the active date is yesterday so users can fill the prior day's aahanik.
   useEffect(() => {
     if (!user) return
-    const logRef = doc(db, 'users', user.uid, 'activityLogs', todayKey())
+    const logRef = doc(db, 'users', user.uid, 'activityLogs', getActiveDate())
     const unsub = onSnapshot(logRef, (snap) => {
       if (snap.exists()) {
         setTodayLog(docToDayLog(snap.data()))
@@ -90,11 +91,11 @@ export function useActivities(): ActivityState {
     return unsub
   }, [user])
 
-  // Real-time listener for the last 30 historical logs (excludes today)
+  // Real-time listener for the last 30 historical logs (excludes the active date)
   // Using onSnapshot instead of getDocs eliminates all async race conditions
   useEffect(() => {
     if (!user) return
-    const today = todayKey()
+    const activeDate = getActiveDate()
     const logsRef = collection(db, 'users', user.uid, 'activityLogs')
     const q = query(logsRef, orderBy('date', 'desc'), limit(31))
     return onSnapshot(q, (snap) => {
@@ -104,14 +105,15 @@ export function useActivities(): ActivityState {
             date: d.data().date as string,
             activities: d.data().activities as Record<string, { done: boolean }>,
           }))
-          .filter(log => log.date !== today)
+          .filter(log => log.date !== activeDate)
       )
     })
   }, [user])
 
-  // Recompute all streaks synchronously whenever today's done-set or history changes
+  // Recompute all streaks synchronously whenever the active day's done-set or history changes
   useEffect(() => {
-    const today = todayKey()
+    const today = todayKey()       // calendar today — used as streak reference
+    const activeDate = getActiveDate()  // the date being filled (may be yesterday before 6am)
 
     // Per-activity streaks
     const streaks: Record<string, number> = {}
@@ -120,18 +122,18 @@ export function useActivities(): ActivityState {
         .filter(log => log.activities?.[id]?.done)
         .map(log => log.date)
       const doneDates = todayLog.activities[id]?.done
-        ? [today, ...histDone]
+        ? [activeDate, ...histDone]
         : histDone
       streaks[id] = computeActivityStreak(doneDates, today)
     }
     setActivityStreaks(streaks)
 
     // Main (all-10) streak
-    const allDoneToday = ACTIVITY_IDS.every(id => todayLog.activities[id]?.done)
+    const allDoneActiveDate = ACTIVITY_IDS.every(id => todayLog.activities[id]?.done)
     const histCompleted = historyLogs
       .filter(log => ACTIVITY_IDS.every(id => log.activities?.[id]?.done))
       .map(log => log.date)
-    const mainDates = allDoneToday ? [today, ...histCompleted] : histCompleted
+    const mainDates = allDoneActiveDate ? [activeDate, ...histCompleted] : histCompleted
     setMainStreak(computeActivityStreak(mainDates, today))
   }, [todayLog.activities, historyLogs])
 
@@ -160,16 +162,17 @@ export function useActivities(): ActivityState {
 
       // Pre-compute streak from post-toggle state before the optimistic update
       const today = todayKey()
+      const activeDate = getActiveDate()
       const nextActivities = { ...todayLog.activities, [activityId]: { done } }
       const willAllComplete = ACTIVITY_IDS.every(id => nextActivities[id]?.done)
       const histCompleted = historyLogs
         .filter(log => ACTIVITY_IDS.every(id => log.activities?.[id]?.done))
         .map(log => log.date)
         .sort((a, b) => b.localeCompare(a))
-      const streakDates = willAllComplete ? [today, ...histCompleted] : histCompleted
+      const streakDates = willAllComplete ? [activeDate, ...histCompleted] : histCompleted
       const streakData = {
         streak: computeActivityStreak(streakDates, today),
-        lastCompletedDate: willAllComplete ? today : (histCompleted[0] ?? null),
+        lastCompletedDate: willAllComplete ? activeDate : (histCompleted[0] ?? null),
       }
 
       // Optimistic update
@@ -198,7 +201,8 @@ export function useActivities(): ActivityState {
         todayLog,
         userProfile,
         activityDefs,
-        streakData
+        streakData,
+        activeDate
       )
     },
     [user, userProfile, activityDefs, todayLog, historyLogs]

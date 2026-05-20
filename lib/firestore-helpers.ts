@@ -95,9 +95,10 @@ export async function saveActivityToggle(
   currentLog: DayLog,
   userProfile: UserProfile,
   activityDefs: ActivityDefinition[],
-  streakData: { streak: number; lastCompletedDate: string | null }
+  streakData: { streak: number; lastCompletedDate: string | null },
+  activeDate?: string
 ): Promise<void> {
-  const dateKey = todayKey()
+  const dateKey = activeDate ?? todayKey()
 
   const updatedActivities: Record<string, { done: boolean; pointsEarned: number; completedAt: unknown }> = {}
   for (const [id, entry] of Object.entries(currentLog.activities)) {
