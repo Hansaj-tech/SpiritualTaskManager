@@ -4,7 +4,6 @@ import crypto from 'crypto'
 const SANTO_UID = 'santo-global-admin'
 
 // Builds a Firebase custom token (RS256 JWT) without the firebase-admin SDK.
-// This sidesteps all Vercel private-key parsing issues.
 function buildCustomToken(uid: string, clientEmail: string, privateKeyPem: string): string {
   const now = Math.floor(Date.now() / 1000)
   const header  = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url')
@@ -17,7 +16,9 @@ function buildCustomToken(uid: string, clientEmail: string, privateKeyPem: strin
     uid,
   })).toString('base64url')
   const input = `${header}.${payload}`
-  const sig = crypto.createSign('RSA-SHA256').update(input).sign(privateKeyPem, 'base64url')
+  // Explicitly create a KeyObject (required for OpenSSL 3 / Node 18+)
+  const keyObject = crypto.createPrivateKey({ key: privateKeyPem, format: 'pem', type: 'pkcs8' })
+  const sig = crypto.createSign('RSA-SHA256').update(input).sign(keyObject, 'base64url')
   return `${input}.${sig}`
 }
 
@@ -55,7 +56,9 @@ export async function POST(req: Request) {
     const token = buildCustomToken(SANTO_UID, clientEmail, privateKey)
     return NextResponse.json({ token })
   } catch (err) {
-    console.error('Santo login error:', err)
-    return NextResponse.json({ error: String(err) }, { status: 500 })
+    const rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY ?? ''
+    const keyFirst = rawKey.substring(0, 40)
+    console.error('Santo login error:', err, '| key starts with:', JSON.stringify(keyFirst))
+    return NextResponse.json({ error: String(err), keyFirst }, { status: 500 })
   }
 }
