@@ -58,6 +58,8 @@ export function docToDayLog(data: DocumentData): DayLog {
   }
 }
 
+const SANTO_UID = 'santo-global-admin'
+
 export async function getOrCreateUserProfile(
   uid: string,
   defaults: { displayName: string; email: string; photoURL: string | null }
@@ -66,12 +68,15 @@ export async function getOrCreateUserProfile(
   const snap = await getDoc(ref)
   if (snap.exists()) return docToUserProfile(uid, snap.data())
 
+  // Santo admin gets isAdmin:true and a kshetra so they skip onboarding
+  const isSanto = uid === SANTO_UID
+
   const newProfile = {
-    displayName: defaults.displayName,
+    displayName: isSanto ? 'Santo Admin' : defaults.displayName,
     email: defaults.email,
     photoURL: defaults.photoURL,
-    kshetra: null,
-    isAdmin: false,
+    kshetra: isSanto ? 'K1' : null,
+    isAdmin: isSanto,
     isKshetraAdmin: false,
     rajipo: 0,
     monthlyRajipo: 0,
