@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { signInWithCustomToken } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-import { Loader2, Eye, EyeOff } from 'lucide-react'
+import { Loader2, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { BapsLogo } from '@/components/baps-logo'
 
 function GoogleIcon() {
@@ -137,8 +137,9 @@ export default function LoginPage() {
           {!santoMode ? (
             <button
               onClick={() => setSantoMode(true)}
-              className="w-full text-xs text-orange-300 hover:text-orange-500 transition-colors py-1"
+              className="w-full h-11 flex items-center justify-center gap-2 rounded-2xl border-2 border-orange-300 text-orange-700 text-sm font-semibold hover:bg-orange-50 hover:border-orange-500 transition-all active:scale-[0.98]"
             >
+              <ShieldCheck className="w-4 h-4 text-orange-500" />
               Santo&apos;s Login
             </button>
           ) : (

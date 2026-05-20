@@ -9,7 +9,12 @@ export async function POST(req: Request) {
   const envUser = process.env.SANTO_USERNAME
   const envPass = process.env.SANTO_PASSWORD
 
-  if (!envUser || !envPass || username !== envUser || password !== envPass) {
+  if (!envUser || !envPass) {
+    console.error('Santo login: SANTO_USERNAME / SANTO_PASSWORD env vars are not set')
+    return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
+  }
+
+  if (username !== envUser || password !== envPass) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
   }
 
