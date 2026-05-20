@@ -27,7 +27,7 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create: if isOwner(uid);
       allow update: if isOwner(uid)
-        || (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isKshetraAdmin', 'updatedAt']));
+        || (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isKshetraAdmin', 'adminKshetras', 'updatedAt']));
 
       match /activityLogs/{dateKey} {
         allow read, write: if isOwner(uid);
