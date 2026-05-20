@@ -14,7 +14,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
-    // Create custom token — Firestore profile is created/updated client-side after sign-in
+    // Diagnose the private key before passing to Admin SDK
+    const rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY ?? ''
+    const keyInfo = {
+      length: rawKey.length,
+      firstChars: rawKey.substring(0, 30),
+      lastChars: rawKey.substring(rawKey.length - 30),
+      hasLiteralBackslashN: rawKey.includes('\\n'),
+      hasRealNewline: rawKey.includes('\n'),
+      startsWithQuote: rawKey.startsWith('"'),
+    }
+    console.log('Key diagnostic:', JSON.stringify(keyInfo))
+
     const token = await adminAuth().createCustomToken(SANTO_UID, { isAdmin: true })
     return NextResponse.json({ token })
   } catch (err) {
