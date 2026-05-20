@@ -56,7 +56,8 @@ export default function LoginPage() {
         body: JSON.stringify({ username: santoUsername, password: santoPassword }),
       })
       if (!res.ok) {
-        setSantoError('Invalid credentials. Please try again.')
+        const data = await res.json().catch(() => ({}))
+        setSantoError(data.error ?? 'Login failed. Please try again.')
         setSantoLoading(false)
         return
       }
