@@ -3,7 +3,7 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { LogOut, User, ChevronDown, Moon, Sun, X, AlertCircle, ShieldCheck } from 'lucide-react'
+import { LogOut, User, ChevronDown, Moon, Sun, X, AlertCircle, ShieldCheck, Trophy } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { useTheme } from '@/contexts/theme-context'
 import { BapsLogo } from '@/components/baps-logo'
@@ -133,6 +133,14 @@ export function Navbar() {
               >
                 <User className="w-4 h-4 text-orange-500" />
                 Edit Profile
+              </DropdownMenu.Item>
+
+              <DropdownMenu.Item
+                className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-orange-800 dark:text-orange-200 rounded-xl hover:bg-orange-50 dark:hover:bg-stone-800 cursor-pointer outline-none transition-colors"
+                onSelect={() => router.push('/profile?tab=achievements')}
+              >
+                <Trophy className="w-4 h-4 text-orange-500" />
+                Achievements
               </DropdownMenu.Item>
 
               {(userProfile?.isAdmin || userProfile?.isKshetraAdmin) && (

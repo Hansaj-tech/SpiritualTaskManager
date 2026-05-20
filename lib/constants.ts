@@ -39,6 +39,8 @@ export const DEFAULT_ACTIVITIES: Record<ActivityId, { name: string; order: numbe
   'niyam':                 { name: 'Niyam',                   order: 15, points: 10 },
 }
 
+export const DEFAULT_ACHIEVEMENT_STAGES = [1000, 2500, 5000, 7500, 10000] as const
+
 export const KSHETRA_OPTIONS = [
   'K1', 'K2', 'K3', 'K4', 'K5', 'K6',
   'K7', 'K8', 'K9', 'K10', 'K11', 'K12',

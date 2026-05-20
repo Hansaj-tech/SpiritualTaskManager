@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useActivities } from '@/hooks/use-activities'
 import { useReminders } from '@/hooks/use-reminders'
@@ -14,9 +14,10 @@ import { ReminderModal } from '@/components/reminders/reminder-modal'
 import { LeaderboardCard } from '@/components/leaderboard/leaderboard-card'
 import { useLeaderboard } from '@/hooks/use-leaderboard'
 import { Loader2, Bell, X, CalendarDays, Star, Clock, Trophy } from 'lucide-react'
-import { ACTIVITY_IDS, BONUS_ACTIVITY_IDS } from '@/lib/constants'
+import { ACTIVITY_IDS, BONUS_ACTIVITY_IDS, DEFAULT_ACHIEVEMENT_STAGES } from '@/lib/constants'
 import { getActiveDate, isFillingYesterday } from '@/lib/date-utils'
 import { useRouter } from 'next/navigation'
+import { MilestoneOverlay } from '@/components/dashboard/milestone-overlay'
 
 const ACHIEVEMENT_NOTIF_KEY = 'aahanik-achievement-intro-seen'
 
@@ -47,6 +48,9 @@ export default function DashboardPage() {
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>('default')
   const [weeklyBannerDismissed, setWeeklyBannerDismissed] = useState(false)
   const [achievementBannerDismissed, setAchievementBannerDismissed] = useState(true)
+  const [milestoneOverlay, setMilestoneOverlay] = useState<{ points: number; tierIndex: number } | null>(null)
+  const prevRajipoRef = useRef<number | null>(null)
+  const mountedRajipoRef = useRef(false)
   const fillingYesterday = isFillingYesterday()
   const activeDateLabel = new Date(getActiveDate() + 'T12:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
 
@@ -63,6 +67,37 @@ export default function DashboardPage() {
       }
     }
   }, [])
+
+  // Detect when user crosses a milestone threshold in real-time
+  useEffect(() => {
+    if (!userProfile) return
+    const curr = userProfile.rajipo
+
+    if (!mountedRajipoRef.current) {
+      prevRajipoRef.current = curr
+      mountedRajipoRef.current = true
+      return
+    }
+
+    const prev = prevRajipoRef.current ?? curr
+    prevRajipoRef.current = curr
+
+    if (curr <= prev) return
+
+    const stages = [...(appConfig.achievementStages ?? DEFAULT_ACHIEVEMENT_STAGES)].sort((a, b) => a - b)
+    for (let i = 0; i < stages.length; i++) {
+      const m = stages[i]
+      if (prev < m && curr >= m) {
+        const key = `aahanik-milestone-seen-${m}`
+        if (!localStorage.getItem(key)) {
+          setMilestoneOverlay({ points: m, tierIndex: i })
+          localStorage.setItem(key, '1')
+        }
+        break
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userProfile?.rajipo])
 
   const showNotifBanner = notifPermission === 'default' && !notifDismissed
 
@@ -296,6 +331,15 @@ export default function DashboardPage() {
           reminder={reminders[openActivity.id]}
           onSave={setReminder}
           onClose={() => setOpenReminderId(null)}
+        />
+      )}
+
+      {/* Milestone celebration overlay */}
+      {milestoneOverlay && (
+        <MilestoneOverlay
+          points={milestoneOverlay.points}
+          tierIndex={milestoneOverlay.tierIndex}
+          onDismiss={() => setMilestoneOverlay(null)}
         />
       )}
     </div>

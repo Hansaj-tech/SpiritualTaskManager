@@ -71,6 +71,7 @@ export function useActivities(): ActivityState {
           motivations: data.motivations ?? undefined,
           motivationDurationHours: data.motivationDurationHours ?? undefined,
           activityYoutubeLinks: data.activityYoutubeLinks ?? undefined,
+          achievementStages: data.achievementStages ?? undefined,
         })
       }
     })
