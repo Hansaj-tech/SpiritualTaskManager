@@ -113,7 +113,6 @@ export function useActivities(): ActivityState {
 
   // Recompute all streaks synchronously whenever the active day's done-set or history changes
   useEffect(() => {
-    const today = todayKey()       // calendar today — used as streak reference
     const activeDate = getActiveDate()  // the date being filled (may be yesterday before 6am)
 
     // Per-activity streaks
@@ -125,7 +124,7 @@ export function useActivities(): ActivityState {
       const doneDates = todayLog.activities[id]?.done
         ? [activeDate, ...histDone]
         : histDone
-      streaks[id] = computeActivityStreak(doneDates, today)
+      streaks[id] = computeActivityStreak(doneDates, activeDate)
     }
     setActivityStreaks(streaks)
 
@@ -135,7 +134,7 @@ export function useActivities(): ActivityState {
       .filter(log => ACTIVITY_IDS.every(id => log.activities?.[id]?.done))
       .map(log => log.date)
     const mainDates = allDoneActiveDate ? [activeDate, ...histCompleted] : histCompleted
-    setMainStreak(computeActivityStreak(mainDates, today))
+    setMainStreak(computeActivityStreak(mainDates, activeDate))
   }, [todayLog.activities, historyLogs])
 
   // On Sundays: compute total tasks done for the week (Mon–Sun = max 70)
@@ -162,7 +161,6 @@ export function useActivities(): ActivityState {
       if (!def) return
 
       // Pre-compute streak from post-toggle state before the optimistic update
-      const today = todayKey()
       const activeDate = getActiveDate()
       const nextActivities = { ...todayLog.activities, [activityId]: { done } }
       const willAllComplete = ACTIVITY_IDS.every(id => nextActivities[id]?.done)
@@ -172,7 +170,7 @@ export function useActivities(): ActivityState {
         .sort((a, b) => b.localeCompare(a))
       const streakDates = willAllComplete ? [activeDate, ...histCompleted] : histCompleted
       const streakData = {
-        streak: computeActivityStreak(streakDates, today),
+        streak: computeActivityStreak(streakDates, activeDate),
         lastCompletedDate: willAllComplete ? activeDate : (histCompleted[0] ?? null),
       }
 
