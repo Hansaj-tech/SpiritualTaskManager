@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { LogOut, Pencil } from 'lucide-react'
+import { BookOpen, LogOut, Pencil, ShieldCheck } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
 import {
   DropdownMenu,
@@ -30,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { isAppAdmin } from '@/lib/admin'
 
 const KSHETRA_OPTIONS = [
   'K1', 'K2', 'K3', 'K4', 'K5', 'K6',
@@ -101,6 +103,23 @@ export function Navbar() {
 
           {/* User avatar dropdown */}
           {user && (
+            <div className="flex items-center gap-4">
+              <Link
+                href="/chaturmas"
+                className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <BookOpen className="h-4 w-4" />
+                <span className="hidden sm:inline">Chaturmas</span>
+              </Link>
+              {isAppAdmin(user.email) && (
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  <span className="hidden sm:inline">Admin</span>
+                </Link>
+              )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
@@ -143,7 +162,8 @@ export function Navbar() {
                   Sign Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
+              </DropdownMenu>
+            </div>
           )}
         </div>
       </motion.header>

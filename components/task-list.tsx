@@ -2,13 +2,13 @@
 
 /**
  * TaskList Component
- * 
+ *
  * Displays the daily spiritual tasks with checkboxes:
  * - Morning Aarti, Evening Aarti
  * - Mansi (1st, 2nd, 3rd)
  * - Reading/Listening activities
  * - Chesta, Pooja
- * 
+ *
  * Handles task completion and submission
  */
 
@@ -20,25 +20,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/auth-context'
+import { useDailyLog, toggleTaskInLog, submitDailyLog, todayKey } from '@/lib/daily-log'
 
-// Type definition for a task
-interface Task {
-  name: string
-  done: boolean
-}
-
-// Initial task list as specified
-const INITIAL_TASKS: Task[] = [
-  { name: 'Morning Aarti', done: false },
-  { name: 'Evening Aarti', done: false },
-  { name: '1st Mansi', done: false },
-  { name: '2nd Mansi', done: false },
-  { name: '3rd Mansi', done: false },
-  { name: 'Vachnamrut Vanchan', done: false },
-  { name: 'Swamini Vato Nu Vanchan', done: false },
-  { name: 'Nitya Prerna Shravan', done: false },
-  { name: 'Chesta', done: false },
-  { name: 'Pooja', done: false },
+// Task names, in display order. These exact strings are also referenced by
+// the Chaturmas feature (via ChaturmasText.taskListMatch) to sync reading
+// completion into this checklist — keep them in sync if renamed.
+const TASK_NAMES = [
+  'Morning Aarti',
+  'Evening Aarti',
+  '1st Mansi',
+  '2nd Mansi',
+  '3rd Mansi',
+  'Vachnamrut Vanchan',
+  'Swamini Vato Nu Vanchan',
+  'Nitya Prerna Shravan',
+  'Chesta',
+  'Pooja',
 ]
 
 interface TaskListProps {
@@ -66,9 +63,12 @@ const itemVariants = {
 
 export function TaskList({ onPointsEarned }: TaskListProps) {
   const { user, userData, refreshUserData } = useAuth()
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const dateKey = todayKey()
+  const { log, loading } = useDailyLog(user?.uid, dateKey)
+
+  const submitted = log?.submitted ?? false
+  const tasks = TASK_NAMES.map((name) => ({ name, done: log?.tasks?.[name] ?? false }))
 
   // Calculate completed tasks count
   const completedCount = tasks.filter(task => task.done).length
@@ -78,14 +78,14 @@ export function TaskList({ onPointsEarned }: TaskListProps) {
   /**
    * Toggle task completion status
    */
-  const toggleTask = (index: number) => {
-    if (submitted) return // Prevent changes after submission
-    
-    setTasks(prev => 
-      prev.map((task, i) => 
-        i === index ? { ...task, done: !task.done } : task
-      )
-    )
+  const toggleTask = async (name: string, done: boolean) => {
+    if (!user || loading || submitted) return // Prevent changes before load / after submission
+
+    try {
+      await toggleTaskInLog(user.uid, dateKey, name, !done)
+    } catch (error) {
+      console.error('Error toggling task:', error)
+    }
   }
 
   /**
@@ -96,17 +96,17 @@ export function TaskList({ onPointsEarned }: TaskListProps) {
    * - Save to Firestore
    */
   const handleSubmit = async () => {
-    if (!user || !userData) return
+    if (!user || !userData || submitted) return
 
     setIsSubmitting(true)
 
     try {
       // Calculate points
       const dailyPoints = completedCount * 10
-      
+
       // Calculate new streak
       const newStreak = allCompleted ? userData.streak + 1 : 0
-      
+
       // Calculate new wallet balance
       const newWallet = userData.wallet + dailyPoints
 
@@ -118,10 +118,11 @@ export function TaskList({ onPointsEarned }: TaskListProps) {
         lastUpdated: serverTimestamp(),
       })
 
+      await submitDailyLog(user.uid, dateKey, dailyPoints)
+
       // Update local state
       onPointsEarned(dailyPoints)
-      setSubmitted(true)
-      
+
       // Refresh user data from Firestore
       await refreshUserData()
     } catch (error) {
@@ -150,20 +151,20 @@ export function TaskList({ onPointsEarned }: TaskListProps) {
       </CardHeader>
 
       <CardContent className="p-0">
-        <motion.ul 
+        <motion.ul
           variants={listVariants}
           initial="hidden"
           animate="visible"
           className="divide-y divide-border"
         >
-          {tasks.map((task, index) => (
-            <motion.li 
+          {tasks.map((task) => (
+            <motion.li
               key={task.name}
               variants={itemVariants}
               className={`group flex cursor-pointer items-center gap-4 px-6 py-4 transition-colors hover:bg-muted/50 ${
                 submitted ? 'cursor-default' : ''
               }`}
-              onClick={() => toggleTask(index)}
+              onClick={() => toggleTask(task.name, task.done)}
             >
               {/* Checkbox Icon */}
               <div className="flex-shrink-0">
@@ -182,8 +183,8 @@ export function TaskList({ onPointsEarned }: TaskListProps) {
 
               {/* Task Name */}
               <span className={`flex-1 text-base transition-colors ${
-                task.done 
-                  ? 'text-muted-foreground line-through' 
+                task.done
+                  ? 'text-muted-foreground line-through'
                   : 'text-foreground'
               }`}>
                 {task.name}
@@ -214,14 +215,14 @@ export function TaskList({ onPointsEarned }: TaskListProps) {
                 Tasks submitted successfully!
               </p>
               <p className="text-sm text-muted-foreground">
-                You earned <span className="font-bold text-primary">{completedCount * 10}</span> points today
+                You earned <span className="font-bold text-primary">{log?.pointsAwarded ?? completedCount * 10}</span> points today
                 {allCompleted && ' 🎉'}
               </p>
             </motion.div>
           ) : (
-            <Button 
+            <Button
               onClick={handleSubmit}
-              disabled={isSubmitting || completedCount === 0}
+              disabled={isSubmitting || loading || completedCount === 0}
               className="w-full gap-2"
               size="lg"
             >

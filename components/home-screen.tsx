@@ -2,14 +2,19 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
+import { BookOpen } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { Dashboard } from './dashboard'
 import { TaskList } from './task-list'
 import { Navbar } from './navbar'
+import { SeasonProgress } from './chaturmas/season-progress'
+import { AnnouncementBanner } from './announcement-banner'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
+import { useSeasonConfig, getChaturmasDayNumber } from '@/lib/chaturmas'
 
 const KSHETRA_OPTIONS = [
   'K1', 'K2', 'K3', 'K4', 'K5', 'K6', 'K7', 'K8', 'K9', 'K10', 'K11', 'K12'
@@ -24,6 +29,9 @@ export function HomeScreen() {
 
   // Profile is complete once kshetra is saved
   const isProfileComplete = !!userData?.kshetra
+
+  const { config: chaturmasConfig } = useSeasonConfig()
+  const chaturmasDay = chaturmasConfig ? getChaturmasDayNumber(new Date(), chaturmasConfig) : null
 
   const handleProfileSubmit = async () => {
     if (!kshetra) return
@@ -59,6 +67,8 @@ export function HomeScreen() {
             Complete your daily Aahanik and earn Rajipo
           </p>
         </motion.div>
+
+        <AnnouncementBanner userKshetra={userData?.kshetra} />
 
         {/* First-time Kshetra setup — disappears after save */}
         {!isProfileComplete && (
@@ -96,6 +106,34 @@ export function HomeScreen() {
                   className="w-full"
                 >
                   {isSubmitting ? 'Saving...' : 'Continue'}
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Chaturmas promo */}
+        {chaturmasConfig && chaturmasDay && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-8"
+          >
+            <Card className="border-primary/20 bg-card">
+              <CardContent className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1">
+                  <SeasonProgress
+                    currentDay={chaturmasDay}
+                    totalDays={chaturmasConfig.totalDays}
+                    label="Chaturmas Vanchan Niyam"
+                  />
+                </div>
+                <Button asChild className="gap-2 sm:w-auto">
+                  <Link href="/chaturmas">
+                    <BookOpen className="h-4 w-4" />
+                    Continue Reading
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

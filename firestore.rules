@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    function isKshetraAdminOf(uid) {
+      let me = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      let target = get(/databases/$(database)/documents/users/$(uid)).data;
+      return isSignedIn()
+        && me.isKshetraAdmin == true
+        && me.kshetra == target.kshetra;
+    }
+
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid)
+        || (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isKshetraAdmin', 'adminKshetras', 'updatedAt']));
+
+
+      match /activityLogs/{dateKey} {
+        allow read, write: if isOwner(uid);
+        allow read: if isAdmin() || isKshetraAdminOf(uid);
+      }
+
+      match /reminders/{activityId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // Chaturmas: per-day bridge between the daily checklist and Chaturmas readings
+      match /dailyLog/{dateKey} {
+        allow read, write: if isOwner(uid);
+        allow read: if isAdmin() || isKshetraAdminOf(uid);
+      }
+
+      // Chaturmas: season-long reading progress, one doc per text
+      match /chaturmasProgress/{textId} {
+        allow read, write: if isOwner(uid);
+        allow read: if isAdmin() || isKshetraAdminOf(uid);
+      }
+    }
+
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Chaturmas: season window (start/end dates, total days)
+    match /chaturmasConfig/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Chaturmas: the 4 texts' metadata and their daily readings
+    match /chaturmasTexts/{textId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      match /readings/{day} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    // Chaturmas: "how did the niyam feel" notes — create-only, never read back by clients
+    match /chaturmasFeedback/{entryId} {
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if false;
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if isSignedIn();
+      allow create, delete: if isAdmin();
+      allow update: if false;
+    }
+  }
+}
