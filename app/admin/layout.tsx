@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
-import { Loader2, Users, Settings, ChevronLeft } from 'lucide-react'
+import { Loader2, Users, Settings, ChevronLeft, Bell } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -71,6 +71,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <Users className="w-4 h-4" />
               Users
             </Link>
+            {userProfile?.isAdmin && (
+              <Link
+                href="/admin/notify"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium text-orange-700 hover:bg-orange-50 transition-colors"
+              >
+                <Bell className="w-4 h-4" />
+                Notify
+              </Link>
+            )}
             {userProfile?.isAdmin && (
               <Link
                 href="/admin/settings"

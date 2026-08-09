@@ -29,6 +29,7 @@ service cloud.firestore {
       allow update: if isOwner(uid)
         || (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isKshetraAdmin', 'adminKshetras', 'updatedAt']));
 
+
       match /activityLogs/{dateKey} {
         allow read, write: if isOwner(uid);
         allow read: if isAdmin() || isKshetraAdminOf(uid);
@@ -42,6 +43,21 @@ service cloud.firestore {
     match /config/{docId} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    // Vachanamrut / Swamini Vato daily reading, uploaded as a PDF and
+    // auto-split into portions. All writes go through the admin-only
+    // /api/admin/vanchan-upload route (Admin SDK, bypasses these rules) or
+    // the portion editor in Settings — clients never write here directly.
+    match /vanchanBooks/{activityId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+
+      match /portions/{portionId} {
+        allow read: if isSignedIn();
+        // Portion text can be hand-edited after upload from the admin panel.
+        allow write: if isAdmin();
+      }
     }
   }
 }

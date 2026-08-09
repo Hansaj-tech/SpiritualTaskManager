@@ -2,9 +2,21 @@
 
 import { useState } from 'react'
 import * as Checkbox from '@radix-ui/react-checkbox'
-import { Check, Bell, BellOff, ChevronDown, ChevronUp, BookOpen, PlayCircle, ExternalLink } from 'lucide-react'
+import { Check, Bell, BellOff, ChevronDown, ChevronUp, BookOpen, PlayCircle, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ActivityDefinition, ActivityLogEntry, ReminderPref } from '@/types'
+
+export interface BookReaderData {
+  title: string
+  index: number
+  totalPortions: number
+  text: string | null
+  loading: boolean
+  onPrev: () => void
+  onNext: () => void
+  onToday: () => void
+  isToday: boolean
+}
 
 interface ActivityRowProps {
   activity: ActivityDefinition
@@ -17,6 +29,7 @@ interface ActivityRowProps {
   vanchanText?: string
   vanchanLink?: string
   youtubeLink?: string
+  bookReader?: BookReaderData
 }
 
 export function ActivityRow({
@@ -30,10 +43,11 @@ export function ActivityRow({
   vanchanText,
   vanchanLink,
   youtubeLink,
+  bookReader,
 }: ActivityRowProps) {
   const done = logEntry?.done ?? false
   const [expanded, setExpanded] = useState(false)
-  const hasVanchan = !!vanchanText
+  const hasVanchan = !!vanchanText || !!bookReader
   const hasYoutubeLink = !!youtubeLink
   const normalizedVanchanLink = vanchanLink
     ? vanchanLink.startsWith('http://') || vanchanLink.startsWith('https://')
@@ -84,7 +98,7 @@ export function ActivityRow({
           )}
         </div>
 
-        {/* This Week's Vanchan toggle — only shown when text is available */}
+        {/* Vanchan toggle — only shown when there's something to read */}
         {hasVanchan && (
           <button
             onClick={() => setExpanded((v) => !v)}
@@ -94,10 +108,10 @@ export function ActivityRow({
                 ? 'bg-orange-500 text-white'
                 : 'bg-orange-100 dark:bg-stone-700 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-stone-600'
             )}
-            title="This Week's Vanchan"
+            title="Read"
           >
             <BookOpen className="w-3 h-3" />
-            <span className="hidden xs:inline">Vanchan</span>
+            <span className="hidden xs:inline">Read</span>
             {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
         )}
@@ -146,8 +160,58 @@ export function ActivityRow({
         </span>
       </div>
 
-      {/* Expandable vanchan panel */}
-      {hasVanchan && expanded && (
+      {/* Expandable reading panel */}
+      {expanded && bookReader && (
+        <div className="px-4 pb-5">
+          <div className="bg-orange-50/70 dark:bg-stone-800/70 rounded-2xl p-5 flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-medium text-orange-900 dark:text-orange-50 truncate">
+                {bookReader.title}
+              </span>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <button
+                  onClick={bookReader.onPrev}
+                  disabled={bookReader.index <= 0}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg text-orange-400 hover:text-orange-700 dark:hover:text-orange-200 disabled:opacity-30 transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="text-xs text-orange-400 tabular-nums w-14 text-center">
+                  {bookReader.index + 1} / {bookReader.totalPortions}
+                </span>
+                <button
+                  onClick={bookReader.onNext}
+                  disabled={bookReader.index >= bookReader.totalPortions - 1}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg text-orange-400 hover:text-orange-700 dark:hover:text-orange-200 disabled:opacity-30 transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {bookReader.loading ? (
+              <p className="text-sm text-orange-300">Loading…</p>
+            ) : bookReader.text ? (
+              <p className="text-sm text-orange-900 dark:text-orange-100 leading-loose whitespace-pre-wrap">
+                {bookReader.text}
+              </p>
+            ) : (
+              <p className="text-sm text-orange-300">No reading uploaded yet.</p>
+            )}
+
+            {!bookReader.isToday && (
+              <button
+                onClick={bookReader.onToday}
+                className="self-start text-xs font-medium text-orange-600 dark:text-orange-300 hover:text-orange-800 dark:hover:text-orange-100 transition-colors"
+              >
+                Back to today&apos;s reading
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {expanded && !bookReader && vanchanText && (
         <div className="px-4 pb-4">
           <div className="bg-orange-50 dark:bg-stone-800 rounded-2xl p-3.5 border border-orange-100 dark:border-stone-700">
             <div className="flex items-center gap-1.5 mb-2">

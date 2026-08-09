@@ -16,6 +16,7 @@ import { useLeaderboard } from '@/hooks/use-leaderboard'
 import { Loader2, Bell, X, CalendarDays, Star, Clock, Trophy } from 'lucide-react'
 import { ACTIVITY_IDS, BONUS_ACTIVITY_IDS, DEFAULT_ACHIEVEMENT_STAGES } from '@/lib/constants'
 import { getActiveDate, isFillingYesterday } from '@/lib/date-utils'
+import { useVanchanReader } from '@/lib/vanchan'
 import { useRouter } from 'next/navigation'
 import { MilestoneOverlay } from '@/components/dashboard/milestone-overlay'
 import { BadgeStrip } from '@/components/dashboard/badge-strip'
@@ -43,6 +44,8 @@ export default function DashboardPage() {
 
   const activityNames = Object.fromEntries(activityDefs.map((a) => [a.id, a.name]))
   const { reminders, setReminder } = useReminders(doneIds, activityNames)
+  const vachnamrutReader = useVanchanReader('vachnamrut-vanchan', activityNames['vachnamrut-vanchan'] ?? 'Vachanamrut')
+  const swaminiVatoReader = useVanchanReader('swamini-vato-vanchan', activityNames['swamini-vato-vanchan'] ?? 'Swamini Vato')
   const { data: leaderboardData } = useLeaderboard()
   const [openReminderId, setOpenReminderId] = useState<string | null>(null)
   const [notifDismissed, setNotifDismissed] = useState(false)
@@ -284,17 +287,24 @@ export default function DashboardPage() {
                 reminder={reminders[activity.id]}
                 onToggle={(done) => toggleActivity(activity.id, done)}
                 onReminderOpen={() => setOpenReminderId(activity.id)}
-                vanchanText={
+                bookReader={
                   activity.id === 'vachnamrut-vanchan'
-                    ? appConfig.thisWeeksVanchan?.vachnamrut
+                    ? vachnamrutReader
                     : activity.id === 'swamini-vato-vanchan'
+                    ? swaminiVatoReader
+                    : undefined
+                }
+                vanchanText={
+                  activity.id === 'vachnamrut-vanchan' && !vachnamrutReader
+                    ? appConfig.thisWeeksVanchan?.vachnamrut
+                    : activity.id === 'swamini-vato-vanchan' && !swaminiVatoReader
                     ? appConfig.thisWeeksVanchan?.swaminiVato
                     : undefined
                 }
                 vanchanLink={
-                  activity.id === 'vachnamrut-vanchan'
+                  activity.id === 'vachnamrut-vanchan' && !vachnamrutReader
                     ? appConfig.thisWeeksVanchan?.vachnamrutLink
-                    : activity.id === 'swamini-vato-vanchan'
+                    : activity.id === 'swamini-vato-vanchan' && !swaminiVatoReader
                     ? appConfig.thisWeeksVanchan?.swaminiVatoLink
                     : undefined
                 }

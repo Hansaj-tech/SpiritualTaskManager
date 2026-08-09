@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import * as Tabs from '@radix-ui/react-tabs'
 import { PointsEditor } from '@/components/admin/points-editor'
 import { ImagesEditor } from '@/components/admin/images-editor'
-import { VanchanEditor } from '@/components/admin/vanchan-editor'
+import { VanchanUploadForm } from '@/components/admin/vanchan-upload-form'
 import { MotivationsEditor } from '@/components/admin/motivations-editor'
 import { YouTubeLinksEditor } from '@/components/admin/youtube-links-editor'
 import { getActivityDefs, getAppConfig } from '@/lib/firestore-helpers'
@@ -74,7 +74,7 @@ export default function AdminSettingsPage() {
         </Tabs.Content>
 
         <Tabs.Content value="vanchan">
-          <VanchanEditor initialVanchan={appConfig.thisWeeksVanchan} />
+          <VanchanUploadForm />
         </Tabs.Content>
 
         <Tabs.Content value="images">
